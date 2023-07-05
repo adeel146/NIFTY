@@ -1,0 +1,26 @@
+.e-rowcell {
+  padding: 0px !important;
+}
+.e-headercelldiv {
+  height: 100% !important;
+}
+.e-grid.e-default.e-bothlines .e-headercell,
+.e-grid.e-default.e-bothlines .e-detailheadercell {
+  padding: "0px" !important ;
+}
+.e-headercell {
+  padding: 0px !important ;
+}
+.e-control .e-gantt .e-lib .e-tooltip .e-keyboard {
+  height: 100% !important;
+}
+
+.e-gantt .e-gantt-chart .e-gantt-parent-taskbar-inner-div {
+  outline: none !important;
+}
+.e-gantt .e-gantt-chart .e-gantt-child-taskbar-inner-div {
+  outline: none !important;
+}
+.e-tbar-btn-text {
+  display: none !important;
+}

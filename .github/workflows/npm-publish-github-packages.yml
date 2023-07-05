@@ -1,0 +1,128 @@
+# name: Nifty CI CD
+
+# on:
+#   push:
+#     branches:
+#       - main
+#   pull_request:
+#     branches:
+#       - main 
+
+# env:
+#   VITE_API_URL: http://kbmhapis.graffitecs.com/v1
+#   LICENSE_KEY: 2NwR6HfnOy7nDrImIeLS3WgDSTKnaxG8nI9CgyjN6oA=
+
+# jobs:
+#   build:
+#     runs-on: windows-latest
+
+#     steps:
+#       - name: Checkout Repository
+#         uses: actions/checkout@v2
+
+#       - name: Set up Node.js
+#         uses: actions/setup-node@v2
+#         with:
+#           node-version: 16
+
+#       - name: Install Yarn
+#         run: npm install -g yarn
+
+#       - name: Install Dependencies
+#         run: yarn install
+
+#       - name: Build
+#         run: yarn build
+
+#       - name: Archive Build
+#         uses: actions/upload-artifact@v2
+#         with:
+#           name: build-artifact
+#           path: dist/
+
+#   deploy:
+#     needs: build
+#     runs-on: windows-latest
+
+#     steps:
+#       - name: Checkout Repository
+#         uses: actions/checkout@v2
+
+#       - name: Download Build Artifact
+#         uses: actions/download-artifact@v2
+#         with:
+#           name: build-artifact
+#           path: dist/
+
+#       - name: Install PuTTY
+#         run: |
+#           Invoke-WebRequest -Uri 'https://the.earth.li/~sgtatham/putty/latest/w64/pscp.exe' -OutFile 'C:\Windows\System32\pscp.exe'
+#       - name: Publish to Server
+#         run: |
+#           $targetDir = 'C:\inetpub\wwwroot\Three60'
+#           $Username = "administrator"
+#           $Password = '8b:@?6v;Akcxv31FYh'
+#           # $Password = ${{ secrets.SERVER_PASSWORD }}
+#           pscp -batch -pw $Password -hostkey "ssh-ed25519 255 SHA256:GCozXgglesxBedTD1xUSIeyTi3Ky7M6immxD3pXZMxU" -logappend -r $env:GITHUB_WORKSPACE/dist/* administrator@207.180.230.73:$targetDir
+
+
+
+name: Nifty CI CD 
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main 
+
+env:
+  VITE_API_URL: http://kbmhapis.graffitecs.com/v1
+  VITE_LICENSE_KEY: ORg4AjUWIQA/Gnt2VFhiQllPd11dXmJWd1p/THNYflR1fV9DaUwxOX1dQl9gSXlTdUVkWHtbeXVRRWY=
+
+jobs:
+  build-and-deploy:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16
+
+      - name: Install Yarn
+        run: npm install -g yarn
+
+      - name: Install Dependencies
+        run: yarn install --network-timeout 1000000
+
+      - name: Build
+        run: yarn build
+
+      - name: Archive Build
+        uses: actions/upload-artifact@v2
+        with:
+          name: build-artifact
+          path: dist/
+
+      - name: Download Build Artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: build-artifact
+          path: dist/
+
+      - name: Install PuTTY
+        run: |
+          Invoke-WebRequest -Uri 'https://the.earth.li/~sgtatham/putty/latest/w64/pscp.exe' -OutFile 'C:\Windows\System32\pscp.exe'
+
+      - name: Publish to Server
+        run: |
+          $targetDir = 'C:\inetpub\wwwroot\Three60'
+          $Username = "administrator"
+          $Password = '8b:@?6v;Akcxv31FYh'
+          # $Password = ${{ secrets.SERVER_PASSWORD }}
+          pscp -batch -pw $Password -hostkey "ssh-ed25519 255 SHA256:GCozXgglesxBedTD1xUSIeyTi3Ky7M6immxD3pXZMxU" -logappend -r $env:GITHUB_WORKSPACE/dist/* administrator@207.180.230.73:$targetDir

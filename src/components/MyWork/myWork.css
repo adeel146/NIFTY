@@ -1,0 +1,112 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  min-width: 1024px;
+}
+.login-wrapprt {
+  background-image: url(../src/images/login-bg-full.png);
+  background-position: 50%;
+  background-repeat: no-repeat;
+  background-size: 100% auto;
+}
+
+.login-container {
+  max-width: 952px;
+}
+.login-content {
+  border-radius: 8px;
+  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.04);
+  min-height: 570px;
+  border: 1px solid #e8e8e8;
+}
+.login-content .col-left {
+  background-color: #fcf9f7;
+}
+.heading-color {
+  color: #2f2f2f;
+}
+.login-content .col-left h2 .label {
+  background-image: linear-gradient(90deg, #fab35c, #f98a3f);
+  border-radius: 10px;
+  box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.09),
+    inset 0 2px 3px 0 hsla(0, 0%, 100%, 0.15);
+  color: #fff;
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 19px;
+  margin: -4px 4px 0 0;
+  padding: 0 6px;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+.login-image {
+  box-shadow: 0 1px 12px 0 rgba(0, 0, 0, 0.08);
+}
+.global-inputFiled {
+  border: 1px solid #e8e8e9;
+  border-radius: 6px;
+  box-shadow: inset 1px 1px 2px 0 rgba(0, 0, 0, 0.03);
+}
+.global-inputFiled:focus {
+  border: 1px solid #00c7bb;
+}
+.global-inputFiled:focus-visible,
+.global-inputFiled:active,
+.global-inputFiled:visited {
+  border: 1px solid #00c7bb;
+  outline: none;
+}
+.btn-success {
+  background-image: linear-gradient(90deg, #02bdad, #00a99b);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.08);
+  color: #fff;
+}
+.divder-text {
+  background: #fcf9f7;
+  border-radius: 8px;
+  color: #2f2f2f;
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 0 6px;
+}
+.btn-secondary {
+  min-width: 170px;
+  color: #f57d2c;
+  background-color: #fff;
+  border: 1px solid #e8e8e8;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+}
+.dropdown:hover .dropdown-menu {
+  display: block;
+  z-index: 999;
+}
+
+/* #sidebar {
+  height: calc(100vh - 48px);
+  position: fixed;
+} */
+.screen_pop li a:hover span {
+  color: #000;
+}
+.screen_pop li a span {
+  color: #8e94bb;
+  color: #8e94bb;
+}
+.screen_pop li a span.text-color {
+  color: #393939;
+}
+.screen_pop li a:hover span.text-color {
+  color: #393939;
+}
+.react-select {
+  width: 173px;
+  border: 1px solid #009084;
+  color: "#009084";
+}
+.customHeight {
+  height: calc(100% - 300px) !important;
+}

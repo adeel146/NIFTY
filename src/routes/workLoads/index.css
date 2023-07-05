@@ -1,0 +1,66 @@
+.e-rowcell {
+  padding: 0px !important;
+}
+.e-headercelldiv {
+  height: 100% !important;
+}
+.e-grid.e-default.e-bothlines .e-headercell,
+.e-grid.e-default.e-bothlines .e-detailheadercell {
+  padding: "0px" !important ;
+}
+.e-headercell {
+  padding: 0px !important ;
+}
+.e-control .e-gantt .e-lib .e-tooltip .e-keyboard {
+  height: 100% !important;
+}
+
+.e-gantt .e-gantt-chart .e-gantt-parent-taskbar-inner-div {
+  outline: none !important;
+}
+.e-gantt .e-gantt-chart .e-gantt-child-taskbar-inner-div {
+  outline: none !important;
+}
+.e-tbar-btn-text {
+  display: none !important;
+}
+
+/* .e-timeline-single-header-cell {
+  border: 1px solid gray !important;
+  border-radius: 10px;
+  margin-right: 2px !important;
+  background-color: white;
+}
+*/
+#WorkLoad-TimeLine .e-timeline-header-table-body {
+  background-color: #fafbfd;
+}
+
+#WorkLoad-TimeLine .e-timeline-single-header-outer-div {
+  height: 67px !important;
+}
+
+#WorkLoad-TimeLine .e-timeline-single-header-cell {
+  height: 70px !important;
+  border: none !important;
+}
+#WorkLoad-TimeLine .e-header-cell-label {
+  background-color: white !important;
+  border-radius: 8px;
+  text-align: center !important;
+  height: 40px;
+  margin-right: 2px;
+  margin-right: 4px !important;
+  margin-left: 4px !important;
+  font-weight: bold;
+  padding: 0px !important;
+  white-space: pre-wrap;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+.e-last-bar {
+  width: 2px !important;
+}
+.e-rg-rangdiv {
+  display: none;
+}

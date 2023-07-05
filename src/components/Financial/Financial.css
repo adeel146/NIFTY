@@ -1,0 +1,35 @@
+.risk-meter {
+  background-image: linear-gradient(
+    to right,
+    red,
+    #e9802b,
+    #ecf22f,
+    #6fcb61,
+    green
+  );
+  border-radius: 3px;
+  height: 50px;
+  width: 100%;
+  position: relative;
+}
+.risk-meter > .fa {
+  position: absolute;
+  right: 50%;
+  transform: translateX(50%);
+  font-size: 28px;
+}
+.risk-meter > .labels span {
+  flex-basis: 22%;
+  text-align: center;
+}
+.risk-meter > .labels span:last-child {
+  flex-basis: 17%;
+  text-align: right;
+}
+.risk-meter > .labels span:first-child {
+  flex-basis: 17%;
+  text-align: left;
+}
+.apexcharts-toolbar {
+  display: none !important;
+}
