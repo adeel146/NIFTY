@@ -27,8 +27,10 @@ export const useGetCalendarTasks = ({ workspace_id, onSuccess }) => {
   return { workspaceResponse };
 };
 
-export const useGetKanbanListTasks = ({ id, onSuccess }) => {
-  let url = `${Apis.GetKanbanList}/${id}`;
+export const useGetKanbanListTasks = ({ id, filter, sortBy, onSuccess }) => {
+  let url = `${Apis.GetKanbanList}/${id}?`;
+  if (filter) url += `TaskFilter=${filter}`;
+  if (sortBy) url += `&TaskSort=${sortBy}`;
 
   const grtProjectTasks = useAppQuery(url, url, {
     enabled: !!id,
@@ -36,7 +38,7 @@ export const useGetKanbanListTasks = ({ id, onSuccess }) => {
   });
   const projectTasks = grtProjectTasks.data?.data?.data ?? [];
 
-  return { projectTasks };
+  return { projectTasks, grtProjectTasks };
 };
 
 export const useAddBasicProjectTask = ({ id, onSuccess }) => {

@@ -106,7 +106,7 @@ const ProfileSettingView = () => {
   };
 
   return (
-    <div className=" pl-8 pt-5 cursor-pointer h-full overflow-y-auto">
+    <div className=" pl-8 pt-5 h-full overflow-y-auto profileSetting-page">
       <div className="flex justify-between items-center mb-3 mr-5 pb-2">
         <h2 className="text-xl font-bold font-Manrope text-[#373737]">
           Profile Setting
@@ -115,6 +115,7 @@ const ProfileSettingView = () => {
           sx={{
             fontSize: "35px",
             color: "#373737",
+            cursor: "pointer",
             "&:hover": { color: "#f98c42" },
           }}
         />
@@ -158,7 +159,7 @@ const ProfileSettingView = () => {
         User Role
       </h1>
       <div className="flex space-x-2 items-center text-sm font-Manrope font-medium ">
-        <h3>Owner</h3>
+        <h3 className="text-[#333] text-base font-semibold ">Owner</h3>
         <HelpIcon
           sx={{
             fontSize: "15px",

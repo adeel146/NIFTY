@@ -389,14 +389,6 @@ export default function RiskAssessmentDialog(props) {
                 </div>
               </div>
 
-              {/* <div className="border-gray-500 mt-3">
-                <HookTextField
-                  name="severityLevel"
-                  errors={errors}
-                  control={control}
-                  labelText="Severity Level"
-                />
-              </div> */}
               <div className="border-gray-500 mt-3">
                 <HookTextField
                   name="migrationNotes"

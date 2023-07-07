@@ -18,9 +18,10 @@ export const ProgressInput = ({
         <div>
           {labelText && (
             <label
-              className={`font-semibold text-[15px] mb-1 font-Manrope  ${labelClass}`}
+              className={`font-semibold text-[15px] mb-1 font-Manrope w-full flex justify-between  ${labelClass}`}
             >
               {labelText}
+              <span>{`${field.value ? field.value : 0}%`}</span>
             </label>
           )}
           <Slider

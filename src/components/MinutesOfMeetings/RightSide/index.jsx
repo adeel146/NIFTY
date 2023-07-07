@@ -5,7 +5,7 @@ import MuiAccordion from "@mui/material/Accordion";
 import MuiAccordionSummary from "@mui/material/AccordionSummary";
 import MuiAccordionDetails from "@mui/material/AccordionDetails";
 import Typography from "@mui/material/Typography";
-import { Box, Checkbox, IconButton, Tooltip } from "@mui/material";
+import { Box, Divider, Checkbox, IconButton, Tooltip } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
@@ -186,8 +186,8 @@ function RightSide(props) {
       userIds: [],
       isTask: false,
       milestoneId: null,
-      startDate: null,
-      endDate: null,
+      startDate: "",
+      endDate: "",
     };
     dispatch(addNewactionItems(payload));
     event.target.value = "";
@@ -244,7 +244,7 @@ function RightSide(props) {
       };
     });
 
-    const users = selectedmeeting.users.map((user) => user.id);
+    const users = selectedmeeting.users.map((user) => user.email) || [];
     const payload = {
       ...selectedmeeting,
       users,
@@ -347,7 +347,7 @@ function RightSide(props) {
 
           {/* Body Component  */}
 
-          <div className=" h-[61vh] overflow-auto">
+          <div>
             <Accordion
               expanded={expanded.includes("panel2")}
               onChange={handleChange("panel2")}
@@ -418,12 +418,15 @@ function RightSide(props) {
                     The things to talk about
                   </small>
                   {selectedmeeting.talkingPoints.map((option, index) => (
-                    <TalkingPoint
-                      key={option}
-                      data={option}
-                      index={index}
-                      users={usersList}
-                    />
+                    <>
+                      <TalkingPoint
+                        key={option}
+                        data={option}
+                        index={index}
+                        users={usersList}
+                      />
+                      <Divider />
+                    </>
                   ))}
                   <div className="flex space-x-1 items-center">
                     <Checkbox
@@ -522,14 +525,17 @@ function RightSide(props) {
                     What came out of this meeting? What are your next steps?
                   </small>
                   {selectedmeeting?.actionItems.map((option, index) => (
-                    <ActionItem
-                      key={option}
-                      data={option}
-                      index={index}
-                      users={usersList}
-                    >
-                      {option}
-                    </ActionItem>
+                    <>
+                      <ActionItem
+                        key={option}
+                        data={option}
+                        index={index}
+                        users={usersList}
+                      >
+                        {option}
+                      </ActionItem>
+                      <Divider />
+                    </>
                   ))}
                   <div className="flex space-x-1 items-center">
                     <Checkbox

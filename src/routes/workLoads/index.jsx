@@ -1,4 +1,3 @@
-import React from "react";
 import TimeLine from "./WorkLoadTimeLine";
 import WorkloadHeader from "./WorkLoadHeader";
 

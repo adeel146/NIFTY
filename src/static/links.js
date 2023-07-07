@@ -16,7 +16,7 @@ export const links = {
   workLoads: `/workLoads`,
   allTasks: `/all/tasks`,
   workspaceDetails: `/workspace/details`,
-  addWorkspaceProject: `/add/project/:portfolioId`,
+  addWorkspaceProject: `/add/project`,
   updateWorkspaceProject: `/upadte/project/:projectId`,
   portfolio: `/portfolio`,
   profileSettings: `/profile/settings`,

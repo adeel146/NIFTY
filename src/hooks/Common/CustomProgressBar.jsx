@@ -1,15 +1,14 @@
 import React from "react";
 import styled from "styled-components";
 
-const CustomProgressBar = ({ bgcolor, completed,width ,margin}) => {
+const CustomProgressBar = ({ bgcolor, completed, width, margin }) => {
   const containerStyles = {
     height: 13,
-    textAlign:"center",
-    width: width? width:"150%",
+    textAlign: "center",
+    width: width ? width : "220px",
     backgroundColor: "#e0e0de",
     borderRadius: 50,
-    margin: margin ? margin:50,
-    
+    margin: margin ? margin : 0,
   };
 
   const fillerStyles = {
@@ -19,14 +18,13 @@ const CustomProgressBar = ({ bgcolor, completed,width ,margin}) => {
     borderRadius: "inherit",
     textAlign: "right",
     fontSize: "9px",
-    fontWeight:"bold",
+    fontWeight: "bold",
     transition: "width 0.2s ease-in-out",
-    
   };
 
   const labelStyles = {
     padding: 8,
-    color: completed == 100 ? "white":"black",
+    color: completed == 100 ? "white" : "black",
     fontWeight: "bold",
   };
 

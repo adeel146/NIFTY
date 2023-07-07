@@ -10,6 +10,8 @@ const HookFreeSelect = ({
   labelText,
   width,
   height,
+  disabled,
+  defaultValue = "",
   // defaultValue = [],
 }) => {
   return (
@@ -32,6 +34,7 @@ const HookFreeSelect = ({
                   }}
                   {...field}
                   // onChange={onChange}
+                  disabled={disabled}
                   value={field.value ? field.value : "select"}
                   className=" h-[45px] rounded-md  bg-white shadow-xs border border-gray-200 pl-3 focus:outline-none hover:text-[#00A99B] custom_select  shadow-inner placeholder:text-sm placeholder:font-Manrope placeholder:font-normal"
                 >

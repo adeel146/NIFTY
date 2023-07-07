@@ -481,7 +481,7 @@ function Header() {
       <div className="flex m-[0_auto] w-[90%]">
         <div className="flex flex-[0_0_auto]">
           <div className="ml-3 mt-[2px]">
-            <button className="bg-[#fff] hover:bg-[#eee] text-[#9399AB] text-sm rounded-md h-6 w-6 pl-2 opacity-70">
+            {/* <button className="bg-[#fff] hover:bg-[#eee] text-[#9399AB] text-sm rounded-md h-6 w-6 pl-2 opacity-70">
               <svg
                 className="color-[white]  text-sm "
                 width="0.5454545454545454em"
@@ -580,7 +580,7 @@ function Header() {
                   </g>
                 </g>
               </svg>
-            </button>
+            </button> */}
           </div>
         </div>
 
@@ -621,9 +621,9 @@ function Header() {
           Create
           <KeyboardArrowDownIcon sx={{ position: "relative", top: "-1px" }} />
         </button>
-        <button className="bg-[#fff] hover:bg-[#eee] border-transparent text-[#9399AB] h-6 py-0 px-4 flex  text-[13px] ml-3 font-medium rounded-md pt-[2px]">
+        {/* <button className="bg-[#fff] hover:bg-[#eee] border-transparent text-[#9399AB] h-6 py-0 px-4 flex  text-[13px] ml-3 font-medium rounded-md pt-[2px]">
           14 days left on trial
-        </button>
+        </button> */}
         <div className="dropdown inline-block relative ">
           <button className=" font-semibold py-2 px-4 rounded inline-flex items-center">
             <span className="items-center font-bold flex justify-center text-white align-middle bg-[#ff735f] border-[#f9a33ad9] h-6 w-6 rounded-md text-[9px] ">

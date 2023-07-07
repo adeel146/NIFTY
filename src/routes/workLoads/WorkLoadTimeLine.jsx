@@ -11,10 +11,6 @@ import "../../syncfusion.css";
 import "./index.css";
 import { Button, ButtonGroup } from "@mui/material";
 import moment from "moment";
-import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
-import DescriptionIcon from "@mui/icons-material/Description";
-import AddIcon from "@mui/icons-material/Add";
-import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import { useDispatch, useSelector } from "react-redux";
 import { openMilestone } from "redux/reducers/mainDashbord";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -38,183 +34,82 @@ import AddMileStoneDialog from "routes/roadMap/AddMileStoneModal";
 import MileStoneDrawer from "components/Main/homeDashboard/dashboard/widgetsCards/milestones/MileStoneDrawer";
 import TaskDrwayer from "components/Main/homeDashboard/dashboard/widgetsCards/taskwidget/TaskDrwayer";
 import ArrowBack from "../../../public/icons/ArrowBack";
-
-// const data = [
-//   {
-//     TaskID: 1,
-//     TaskName: "Project Initiation",
-//     StartDate: new Date("04/02/2019"),
-//     EndDate: new Date("04/04/2019"),
-//     subtasks: [
-//       {
-//         TaskID: 2,
-//         TaskName: "Identify Site location",
-//         StartDate: new Date("04/02/2019"),
-//         Duration: 4,
-//         progress: 50,
-//       },
-//       {
-//         TaskID: 3,
-//         TaskName: "Perform Soil test",
-//         StartDate: new Date("04/02/2019"),
-//         Duration: 4,
-//         Predecessor: "2FS",
-//       },
-//       {
-//         TaskID: 4,
-//         TaskName: "Soil test approval",
-//         StartDate: new Date("04/02/2019"),
-//         Duration: 4,
-//       },
-//     ],
-//   },
-//   {
-//     TaskID: 2,
-//     TaskName: "Identify Site location",
-//     StartDate: new Date("04/02/2019"),
-//     Duration: 4,
-//     progress: 50,
-//   },
-//   {
-//     TaskID: 3,
-//     TaskName: "Perform Soil test",
-//     StartDate: new Date("04/07/2019"),
-//     Duration: 8,
-//     Predecessor: "2",
-//   },
-//   {
-//     TaskID: 4,
-//     TaskName: "Soil test approval",
-//     StartDate: new Date("04/02/2019"),
-//     Duration: 4,
-//   },
-//   {
-//     TaskID: 43,
-//     TaskName: "Soil test approval",
-//     StartDate: new Date("04/02/2019"),
-//     Duration: 4,
-//   },
-//   {
-//     TaskID: 42,
-//     TaskName: "Soil test approval",
-//     StartDate: new Date("04/02/2019"),
-//     Duration: 4,
-//   },
-//   {
-//     TaskID: 41,
-//     TaskName: "Soil test approval",
-//     StartDate: new Date("04/02/2019"),
-//     Duration: 4,
-//     Predecessor: "3",
-//   },
-//   {
-//     TaskID: 5,
-//     TaskName: "Project Estimation",
-//     StartDate: new Date("04/02/2019"),
-//     EndDate: new Date("04/21/2019"),
-//     // subtasks: [
-//     //   {
-//     //     TaskID: 6,
-//     //     TaskName: "Develop floor plan for estimation",
-//     //     StartDate: new Date("04/04/2019"),
-//     //     Duration: 3,
-//     //   },
-//     // ],
-//   },
-// ];
+import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
+import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
+import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";
+import CircularProgress from "@mui/material/CircularProgress";
 
 function WorkloadTimeLine() {
+  const workspaceId = localStorage.getItem("workspaceId");
   const [defaultWidth, setdefaultWidth] = React.useState("25%");
   const [mileStonesList, setMileStonesList] = React.useState([]);
-  const [isOpenAddMileStone, setisOpenAddMileStone] = React.useState(false);
   const [viewMode, setViewMode] = React.useState("Month");
+
+  const { isLoading, data = {} } = useQuery(
+    ["get-workloads", workspaceId],
+    async () => {
+      return axios.get(`workload?workspace_id=${workspaceId}`);
+    },
+    {
+      select: (res) => {
+        const resData = res?.data?.data;
+        return {
+          startDate: moment(resData?.startDate)
+            .subtract(2, "days")
+            .format("MM/DD/YYYY"),
+          endDate: moment(resData?.endDate)
+            .add(15, "days")
+            .format("MM/DD/YYYY"),
+          resources:
+            resData.resources?.map((val) => {
+              return {
+                resourceId: val.resourceId,
+                resourceName: val.resourceName ?? "no name",
+                resourceGroup: val.resourceName ?? "no name",
+                isExpand: false,
+                data: val.data,
+              };
+            }) ?? [],
+          tasks: resData?.tasks?.map((val) => {
+            return {
+              task_Id: val.task_Id,
+              taskName: val.taskName,
+              startDate: new Date(moment(val.startDate).format("DD/MM/YYYY")),
+              duration: val.duration,
+              resources: val.resources,
+              Progress: val.progress,
+              work: val.work,
+            };
+          }),
+        };
+      },
+    },
+    {
+      refetchOnWindowFocus: false,
+    }
+  );
+
   let ganttInstance;
-  const { milestoneState } = useSelector((state) => state?.dashbordSlice);
   const isOpenTaskDrawer = useSelector(
     (state) => state?.projectTaskSlice?.taskState
   );
-  const loginUserDetail = useAuth();
 
-  // const workWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"];
-  // const taskFields = {
-  //   id: "TaskID",
-  //   name: "TaskName",
-  //   startDate: "StartDate",
-  //   endDate: "EndDate",
-  //   duration: "duration",
-  //   child: "subtasks",
-  //   dependency: "predecessor",
-  // };
-
-  const getWorkingDays = React.useMemo(() => {
-    const startDay = loginUserDetail.user.day || 0;
-    const workWeek = [
-      "Sunday",
-      "Monday",
-      "Tuesday",
-      "Wednesday",
-      "Thursday",
-      "Friday",
-      "Saturday",
-    ];
-
-    // Get the working days by slicing the workWeek array
-    const workingDays = workWeek.slice(startDay, startDay + 5);
-
-    return workingDays;
-  }, []);
   const taskFields = {
-    id: "TaskID",
-    name: "TaskName",
-    startDate: "StartDate",
-    endDate: "EndDate",
-    duration: "Duration",
-    progress: "Progress",
-    dependency: "Predecessor",
+    id: "task_Id",
+    name: "taskName",
+    startDate: "startDate",
+    // endDate: "EndDate",
+    duration: "duration",
+    progress: "progress",
     resourceInfo: "resources",
-    work: "work",
     expandState: "isExpand",
-    child: "subtasks",
   };
 
   const resourceFields = {
     id: "resourceId",
     name: "resourceName",
-    unit: "resourceUnit",
-    group: "resourceGroup",
+    data: "data",
   };
-
-  let { projectId } = useParams();
-  const { enqueueSnackbar } = useSnackbar();
-
-  const { isLoading } = useQuery({
-    queryKey: ["get-milestone", projectId],
-    queryFn: () => axios.get(`milestone/${144}`),
-    onSuccess: (data) => {
-      setMileStonesList(data.data.data);
-    },
-    onError: (data) => {
-      enqueueSnackbar(data.response.data.message, { variant: "error" });
-    },
-    refetchOnWindowFocus: false,
-  });
-
-  const { mutate: updateMilestoneDate } = useMutation({
-    mutationKey: ["milestone/change_date/"],
-    mutationFn: (data) =>
-      axios.put(`milestone/change_date/${data.id}`, data.body),
-    onError: (data) => {
-      enqueueSnackbar(data.response.data.message, { variant: "error" });
-    },
-  });
-  const { mutate: updateTaskDate } = useMutation({
-    mutationKey: ["task/change_date/"],
-    mutationFn: (data) =>
-      axios.put(`task/update_duration/${data.id}`, data.body),
-    onError: (data) => {
-      enqueueSnackbar(data.response.data.message, { variant: "error" });
-    },
-  });
 
   const editSettings = {
     allowTaskbarEditing: true,
@@ -253,310 +148,18 @@ function WorkloadTimeLine() {
       },
     },
   };
-
-  // Event handler for actionComplete event
-
-  function handleActionComplete(args) {
-    console.log(args, "args");
-    if (args.action === "TaskbarEditing" && !args.data.taskData.isTask) {
-      let payload = {
-        id: args.data.id,
-        body: {
-          startDate: moment(args.data.startDate).toISOString(),
-          endDate: moment(args.data.endDate).toISOString(),
-        },
-      };
-      updateMilestoneDate(payload);
-    } else if (args.action === "TaskbarEditing" && args.data.taskData.isTask) {
-      let payload = {
-        id: args.data.id,
-        body: {
-          startDate: moment(args.data.startDate).toISOString(),
-          endDate: moment(args.data.endDate).toISOString(),
-        },
-      };
-      updateTaskDate(payload);
-    }
-  }
-
-  const queryTaskbarInfo = (args) => {
-    console.log(args, "queryTaskbarInfo");
-    args.taskbarBorderColor = "transparent";
-    const currentDate = new Date();
-    if (new Date(args.data.endDate) < currentDate) {
-      return (args.taskbarBgColor = "#FF8585");
-    }
-    if (args.data.taskData.isTask) {
-      args.progressBarBgColor = "#22B07D";
-      args.taskbarBgColor = "#00AD9F";
-    } else if (!args.data.taskData.isTask) {
-      args.progressBarBgColor = "#374253";
-      args.taskbarBgColor = args.data.taskData.color || "#DEDEE0";
-    } else {
-      args.progressBarBgColor = "#FFBA2F";
-      args.taskbarBgColor = "#FFBA2F";
-    }
-  };
-
-  // Event handler for actionBegin event
-  // function handleActionBegin(args) {
-  //   console.log(args, "handleActionBegin");
-  // }
-
-  //for custom taskabar
-
-  function TaskbarTemplate(props) {
-    return (
-      <div className="e-gantt-child-taskbar-inner-div e-gantt-child-taskbar ">
-        <div className="e-gantt-child-progressbar-inner-div e-gantt-child-progressbar"></div>
-        <span className="e-task-label">{props.TaskName}</span>
-      </div>
-    );
-  }
-
-  const childTaskbarTemplate = TaskbarTemplate.bind(this);
-  function ParentTaskbarTemplate(props) {
-    return (
-      <div className="e-gantt-parent-taskbar-inner-div e-gantt-parent-taskbar">
-        <div className="e-gantt-parent-progressbar-inner-div e-row-expand e-gantt-parent-progressbar"></div>
-        <span className="e-task-label">{props.TaskName}</span>
-      </div>
-    );
-  }
-
-  // function customizeCell(args) {
-  //   console.log(args, "arg");
-  //   args.cell.style.backgroundColor = "lightgreen";
-  //   if (args.column.field == "Progress") {
-  //     args.cell.style.backgroundColor = "lightgreen";
-  //   }
-  // }
-  // function rowDataBound(args) {
-  //   if (args.data.TaskID == 43) args.row.style.backgroundColor = "red";
-  // }
-  //   const toolbarOptions = [
-  //     "PrevTimeSpan",
-  //     "NextTimeSpan",
-  //     "ExpandAll",
-  //     "CollapseAll",
-  //   ];
-
-  const resources = [
-    {
-      resourceId: 1,
-      resourceName: "Martin Tamer",
-      resourceGroup: "Planning Team",
-      isExpand: false,
-    },
-    {
-      resourceId: 2,
-      resourceName: "Rose Fuller",
-      resourceGroup: "Testing Team",
-      isExpand: false,
-    },
-    {
-      resourceId: 3,
-      resourceName: "Margaret Buchanan",
-      resourceGroup: "Approval Team",
-      isExpand: false,
-    },
-    {
-      resourceId: 4,
-      resourceName: "Fuller King",
-      resourceGroup: "Development Team",
-      isExpand: false,
-    },
-    {
-      resourceId: 5,
-      resourceName: "Davolio Fuller",
-      resourceGroup: "Approval Team",
-      isExpand: false,
-    },
-  ];
-
-  const multiTaskbarData = [
-    {
-      TaskID: 1,
-      TaskName: "Project initiation",
-      StartDate: new Date("03/29/2019"),
-      EndDate: new Date("04/21/2019"),
-      subtasks: [
-        {
-          TaskID: 2,
-          TaskName: "Identify site location",
-          StartDate: new Date("03/29/2019"),
-          Duration: 3,
-          Progress: 30,
-          work: 10,
-          resources: [{ resourceId: 1, resourceUnit: 50 }],
-        },
-        {
-          TaskID: 3,
-          TaskName: "Perform soil test",
-          StartDate: new Date("04/03/2019"),
-          Duration: 4,
-          resources: [{ resourceId: 1, resourceUnit: 70 }],
-          Predecessor: 2,
-          Progress: 30,
-          work: 20,
-        },
-        {
-          TaskID: 4,
-          TaskName: "Soil test approval",
-          StartDate: new Date("04/09/2019"),
-          Duration: 4,
-          resources: [{ resourceId: 1, resourceUnit: 25 }],
-          Predecessor: 3,
-          Progress: 30,
-          work: 10,
-        },
-      ],
-    },
-    {
-      TaskID: 5,
-      TaskName: "Project estimation",
-      StartDate: new Date("03/29/2019"),
-      EndDate: new Date("04/21/2019"),
-      subtasks: [
-        {
-          TaskID: 6,
-          TaskName: "Develop floor plan for estimation",
-          StartDate: new Date("04/01/2019"),
-          Duration: 5,
-          Progress: 30,
-          resources: [{ resourceId: 2, resourceUnit: 50 }],
-          work: 30,
-        },
-        {
-          TaskID: 7,
-          TaskName: "List materials",
-          StartDate: new Date("04/04/2019"),
-          Duration: 4,
-          resources: [{ resourceId: 2, resourceUnit: 40 }],
-          Predecessor: "6FS-2",
-          Progress: 30,
-          work: 40,
-        },
-        {
-          TaskID: 8,
-          TaskName: "Estimation approval",
-          StartDate: new Date("04/09/2019"),
-          Duration: 4,
-          resources: [{ resourceId: 2, resourceUnit: 75 }],
-          Predecessor: "7FS-1",
-          Progress: 30,
-          work: 60,
-        },
-      ],
-    },
-    {
-      TaskID: 9,
-      TaskName: "Site work",
-      StartDate: new Date("04/04/2019"),
-      EndDate: new Date("04/21/2019"),
-      subtasks: [
-        {
-          TaskID: 10,
-          TaskName: "Install temporary power service",
-          StartDate: new Date("04/01/2019"),
-          Duration: 14,
-          Progress: 30,
-          resources: [{ resourceId: 3, resourceUnit: 75 }],
-        },
-        {
-          TaskID: 11,
-          TaskName: "Clear the building site",
-          StartDate: new Date("04/08/2019"),
-          Duration: 9,
-          Progress: 30,
-          Predecessor: "10FS-9",
-          resources: [3],
-        },
-        {
-          TaskID: 12,
-          TaskName: "Sign contract",
-          StartDate: new Date("04/12/2019"),
-          Duration: 5,
-          resources: [3],
-          Predecessor: "11FS-5",
-        },
-      ],
-    },
-    {
-      TaskID: 13,
-      TaskName: "Foundation",
-      StartDate: new Date("04/04/2019"),
-      EndDate: new Date("04/21/2019"),
-      subtasks: [
-        {
-          TaskID: 14,
-          TaskName: "Excavate for foundations",
-          StartDate: new Date("04/01/2019"),
-          Duration: 2,
-          Progress: 30,
-          resources: [4],
-        },
-        {
-          TaskID: 15,
-          TaskName: "Dig footer",
-          StartDate: new Date("04/04/2019"),
-          Duration: 2,
-          Predecessor: "14FS + 1",
-          resources: [4],
-        },
-        {
-          TaskID: 16,
-          TaskName: "Install plumbing grounds",
-          StartDate: new Date("04/08/2019"),
-          Duration: 2,
-          Progress: 30,
-          Predecessor: 15,
-          resources: [4],
-        },
-      ],
-    },
-    {
-      TaskID: 17,
-      TaskName: "Framing",
-      StartDate: new Date("04/04/2019"),
-      EndDate: new Date("04/21/2019"),
-      subtasks: [
-        {
-          TaskID: 18,
-          TaskName: "Add load-bearing structure",
-          StartDate: new Date("04/03/2019"),
-          Duration: 2,
-          Progress: 30,
-          resources: [5],
-        },
-        {
-          TaskID: 19,
-          TaskName: "Natural gas utilities",
-          StartDate: new Date("04/08/2019"),
-          Duration: 4,
-          Predecessor: "18",
-          resources: [5],
-        },
-        {
-          TaskID: 20,
-          TaskName: "Electrical utilities",
-          StartDate: new Date("04/11/2019"),
-          Duration: 2,
-          Progress: 30,
-          Predecessor: "19FS + 1",
-          resources: [5],
-        },
-      ],
-    },
-  ];
   const projectStartDate = new Date("03/28/2019");
-  const projectEndDate = new Date("05/18/2019");
+  const projectEndDate = new Date("05/18/2023");
   const labelSettings = {
-    taskLabel: "TaskName",
+    taskLabel: "taskName",
   };
 
   if (isLoading) {
-    <CustomLoader />;
+    return (
+      <div className="flex justify-center items-center h-[25em]">
+        <CircularProgress />
+      </div>
+    );
   }
 
   return (
@@ -600,12 +203,9 @@ function WorkloadTimeLine() {
             // queryTaskbarInfo={queryTaskbarInfo}
             // taskbarTemplate={childTaskbarTemplate}
             rowHeight={100}
-            taskbarHeight={30}
+            taskbarHeight={50}
             // connectorLineBackground="#dedee0"
             // connectorLineWidth={2}
-            // // parentTaskbarTemplate={ParentTaskbarTemplate}
-            // // queryCellInfo={customizeCell}
-            // // rowDataBound={rowDataBound}
             gridLines="Both"
             height="100%"
             // splitterResizing={false}
@@ -616,9 +216,9 @@ function WorkloadTimeLine() {
             // workWeek={getWorkingDays}
             // allowTaskbarOverlap={false}
             // // toolbar={toolbarOptions}
-
+            // key={JSON.stringify(workLoadsList)}
             ref={(gantt) => (ganttInstance = gantt)}
-            dataSource={multiTaskbarData}
+            taskFields={taskFields}
             treeColumnIndex={1}
             viewType="ResourceView"
             enableMultiTaskbar={true}
@@ -627,25 +227,33 @@ function WorkloadTimeLine() {
             highlightWeekends={true}
             // toolbar={toolbar}
             editSettings={editSettings}
-            projectStartDate={projectStartDate}
-            projectEndDate={projectEndDate}
+            projectStartDate={
+              data?.startDate ? new Date(data?.startDate) : new Date()
+            }
+            projectEndDate={
+              data?.endDate ? new Date(data?.endDate) : new Date()
+            }
+            // projectStartDate={projectStartDate}
+            // projectEndDate={projectEndDate}
             resourceFields={resourceFields}
-            taskFields={taskFields}
             labelSettings={labelSettings}
             splitterSettings={splitterSettings}
-            resources={resources}
+            resources={data?.resources ?? []}
+            dataSource={data?.tasks ?? []}
             showOverAllocation={true}
             allowTaskbarOverlap={false}
           >
             <ColumnsDirective>
               <ColumnDirective
                 field="TaskName"
-                // template={TaskNameTemplate}
+                template={TaskNameTemplate}
                 headerTemplate={CustomHeaderTemplate}
               ></ColumnDirective>
-              <ColumnDirective field="TaskID" visible={false}></ColumnDirective>
+              <ColumnDirective
+                field="task_Id"
+                visible={false}
+              ></ColumnDirective>
             </ColumnsDirective>
-            <Inject services={[Edit]} />
           </GanttComponent>
         </div>
       </div>
@@ -656,21 +264,10 @@ function WorkloadTimeLine() {
 export default WorkloadTimeLine;
 
 const TaskNameTemplate = (props) => {
-  const {
-    name,
-    id: mileStone_Id,
-    taskData: { tasks },
-    taskData,
-    childRecords,
-    expanded,
-    parentItem,
-    startDate,
-    endDate,
-    duration,
-    ...rest
-  } = props;
+  const { name, id: mileStone_Id, expanded, taskData } = props;
 
-  console.log(taskData, "propsmilestone");
+  console.log(taskData, "taskData");
+
   const [isOpenSubTasks, setisOpenSubTasks] = React.useState(expanded);
   const [taskVal, seTtaskVal] = React.useState("");
   const dispatch = useDispatch();
@@ -751,36 +348,163 @@ const TaskNameTemplate = (props) => {
   };
 
   return (
-    <div key={mileStone_Id}>
-      <div
-        onClick={() => dispatch(openMilestone(mileStone_Id))}
-        className=" space-y-1 px-[20px] cursor-pointer "
-      >
-        <div className=" font-medium ">{name}</div>
+    taskData.resourceId && (
+      <div className="absolute top-0 w-full" key={mileStone_Id}>
         <div
-          onClick={handleChange}
-          className="flex w-max items-center text-gray-400 hover:border-b-2 border-dashed border-gray-600 cursor-pointer  "
+          onClick={() => dispatch(openMilestone(mileStone_Id))}
+          className=" space-y-1 px-3 cursor-pointer "
         >
-          <span>
+          <div className=" font-medium ">{name}</div>
+          <div
+            onClick={handleChange}
+            className="flex items-center flex-col text-gray-400 cursor-pointer  "
+          >
+            {/* <span>
             <DescriptionIcon fontSize="22px" />
           </span>
-          &nbsp; {childRecords.length} Open tasks
-          {/* <span>
-            <ArrowForwardIosIcon
-              className={`${isOpenSubTasks && "rotate-90"}`}
-              fontSize="22px"
-            />
-          </span> */}
+          &nbsp; {childRecords.length} Open tasks */}
+            <div className="flex w-full mt-1">
+              <Avatar
+                variant="rounded"
+                src={taskData.data.photo.file_path}
+                sx={{ width: "32px", height: "32px" }}
+              />
+              <div className="flex w-full mt-2 ml-[5px] relative">
+                <h5 className="pb-[16px] text-[#333] font-medium">
+                  {taskData.data.name}
+                </h5>
+                <div className="px-[6px] py-2 absolute bottom-0 text-[11px] rounded-[3px] text-[#fff] bg-[#00B9A9] inline">
+                  Front end developer
+                </div>
+              </div>
+            </div>
+            <div className="flex w-full flex-col gap-1 mt-1">
+              <div className="flex items-center">
+                <CalendarTodayOutlinedIcon sx={{ fontSize: "13px" }} />
+                <p className="text-[11px] ml-1">2 hours track Nov 1 - Nov 8</p>
+              </div>
+              <div className="flex items-center">
+                <AssignmentOutlinedIcon sx={{ fontSize: "13px" }} />
+                <p className="text-[11px] ml-1">
+                  {taskData?.Children?.length} open tasks{" "}
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    )
   );
 };
 
 const CustomHeaderTemplate = () => {
+  const [open, setopen] = React.useState(false);
+  const [anchorEl, setAnchorEl] = React.useState(null);
+  const [portfolio, setportfolio] = React.useState({});
+  const handleClose = () => {
+    setAnchorEl(null);
+    setopen(false);
+  };
   return (
-    <div className="bg-[#FAFBFD] h-full ">
-      <span>Custom Header</span>
+    <div className="bg-[#FAFBFD] h-full px-3 py-1 ">
+      <div className="flex w-full justify-between">
+        <h3 className="text-[14px] text-[#333] font-medium">Members</h3>
+        {/* <div className="group relative">
+          <button className="px-0 py-0  text-[#9399AB] flex items-center font-Manrope text-[13px]">
+            Filter By{" "}
+            <KeyboardArrowDownOutlinedIcon
+              sx={{ fontSize: "17px", marginLeft: "3px" }}
+            />
+          </button>
+          <div
+            tabIndex={0}
+            className=" bg-white invisible border border-[#E8E8E9] rounded w-[120px] right-1 absolute  top-full transition-all opacity-0 group-focus-within:visible group-focus-within:opacity-100 group-focus-within:translate-y-1 z-[999]"
+          >
+            <ul className="py-1 commonDropDown">
+              <li className="px-2 mb-1">
+                <a href="#" className="d-flex font-Manrope text-[12px]">
+                  On track
+                </a>
+              </li>
+              <li className="px-2 mb-1 selected">
+                <a href="#" className="d-flex font-Manrope text-[12px]">
+                  At risk
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div> */}
+        {/* {Boolean(open) && (
+          <Popover
+            onClose={handleClose}
+            sx={{
+              height: "200px",
+            }}
+            open={Boolean(open)}
+            anchorEl={anchorEl}
+            anchorOrigin={{
+              vertical: "bottom",
+              horizontal: "center",
+            }}
+            transformOrigin={{
+              vertical: "top",
+              horizontal: "center",
+            }}
+          >
+            <div
+              tabIndex={0}
+              className=" bg-white  border border-[#E8E8E9] rounded w-[270px]  "
+            >
+              <ul className="py-1">
+                <li>
+                  <input
+                    type="text"
+                    className=" text-[13px] border-0 border-b-slate-50"
+                    placeholder="Search assignee"
+                    // onChange={handleFilterChange}
+                  />
+                </li>
+                <li>
+                  <div
+                    onClick={() => {
+                      // setSelectedPortfolio(null);
+                      setportfolio(null);
+                      handleClose();
+                    }}
+                    className="flex cursor-pointer items-center px-4 py-2 font-Manrope capitalize text-[14px] font-semibold  hover:bg-[#F2FFFE] hover:text-[#00B8A9] "
+                  >
+                    All Portfolios
+                  </div>
+                </li>
+                {PortfolioList?.map((el) => (
+                  <li key={el.value}>
+                    <div
+                      onClick={() => {
+                        setSelectedPortfolio(el);
+                        setportfolio(el);
+                        handleClose();
+                      }}
+                      className="flex cursor-pointer items-center px-4 py-2 font-Manrope capitalize text-[14px] font-semibold  hover:bg-[#F2FFFE] hover:text-[#00B8A9] "
+                    >
+                      {el.label}{" "}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </Popover>
+        )} */}
+      </div>
+      <div className=" relative mt-[1px] flex">
+        <span className="relative -top-1">
+          <SearchOutlinedIcon sx={{ fontSize: "16px", cursor: "pointer" }} />
+        </span>
+        <input
+          placeholder="Search by name or tag ..."
+          className="outline-none w-full bg-none text-[12px] font-[400] h-[24px] bg-transparent pl-[4px] border-none"
+          value=""
+        />
+      </div>
     </div>
   );
 };

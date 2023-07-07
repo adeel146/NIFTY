@@ -64,3 +64,11 @@
 .e-rg-rangdiv {
   display: none;
 }
+
+#WorkLoad-TimeLine .e-rowcell {
+  position: relative !important;
+}
+
+/* #WorkLoad-TimeLine .e-gantt-child-taskbar {
+  border-left: 2px solid orange;
+} */

@@ -1,122 +1,62 @@
-import {
-  Box,
-  Menu,
-  MenuItem,
-  Paper,
-  Popover,
-  Popper,
-  IconButton,
-} from "@mui/material";
+import { MenuItem, Popover, IconButton } from "@mui/material";
 import AddList from "components/Layout/AllTasks/AddList";
-import {
-  useAddProjectTask,
-  useGetProjectList,
-  useGetProjectStatus,
-  useGetProjectTasks,
-} from "hooks/MyWork";
+import { useGetProjectList, useGetProjectStatus } from "hooks/MyWork";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import AssignmentIcon from "@mui/icons-material/Assignment";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
-import {
-  useAddBasicProjectTask,
-  useAddNewTask,
-  useGetKanbanListTasks,
-} from "hooks/ProjectTask.jsx";
-import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
+import { useAddNewTask, useGetKanbanListTasks } from "hooks/ProjectTask.jsx";
 import "react-loading-skeleton/dist/skeleton.css";
-import PersonAddIcon from "@mui/icons-material/PersonAdd";
-import { DatePicker } from "@mui/x-date-pickers";
-import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { useDisplaySuccess } from "hooks/useDisplaySuccess";
 import AccessAlarmsIcon from "@mui/icons-material/AccessAlarms";
-import { useEffect, useMemo, useRef, useState } from "react";
-import Select from "react-select";
-import { usePortfolios } from "hooks/Portfolio";
+import { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import Autocomplete from "@mui/material/Autocomplete";
-import TextField from "@mui/material/TextField";
-import { useAuth } from "hooks/useAuth";
-import ReportsViewTasks from "components/Layout/AllTasks/ReportsViewTasks";
 import { useParams } from "react-router-dom";
 import PopupState, { bindPopover, bindTrigger } from "material-ui-popup-state";
 import { formateDate } from "utils";
 import { DateRangePicker } from "react-date-range";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import ExpandCircleDownIcon from "@mui/icons-material/ExpandCircleDown";
-import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import TableViewIcon from "@mui/icons-material/TableView";
 import ImportExportIcon from "@mui/icons-material/ImportExport";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
-import LockPersonIcon from "@mui/icons-material/LockPerson";
 import AddIcon from "@mui/icons-material/Add";
 import Tooltip from "@mui/material/Tooltip";
 import CloseIcon from "@mui/icons-material/Close";
-import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
-import PeopleOutlineIcon from "@mui/icons-material/PeopleOutline";
-import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import { useDispatch } from "react-redux";
-import { openProjectTask, taskDrawyerOpen } from "redux/actions";
+import { taskDrawyerOpen } from "redux/actions";
 import WhiteButton from "hooks/Common/commonButtons/WhiteButton";
 import GreenButton from "hooks/Common/commonButtons/GreenButton";
+import CancelIcon from "@mui/icons-material/Cancel";
 import { isEmpty } from "lodash";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { enqueueSnackbar } from "notistack";
-import moment from "moment";
 import { Apis } from "static/apis";
 import TaskDrwayer from "components/Main/homeDashboard/dashboard/widgetsCards/taskwidget/TaskDrwayer";
-import HookTextField from "hooks/Common/HookTextField";
 import CheckIcon from "@mui/icons-material/Check";
 import { useDisplayError } from "hooks/useDisplayError";
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
-import Loader from "assets/Loader";
 
 function ListViewProjects({ selectedView }) {
-  const [filterBy, setFilterBy] = useState("");
   const [tagId, setTagId] = useState(false);
-
-  const [filterAnchorEl, setFilterAnchorEl] = useState(null);
-  const [allProjectsAnchorEl, setAllProjectsAnchorEl] = useState(null);
-  const [groupByAchorEl, setGroupByAnchorEl] = useState(null);
-  const [viewsAchorEl, setViewsAnchorEl] = useState(null);
-  const [activeGroupBy, setActiveGroupBy] = useState("list");
-  const [addNewView, setAddNewView] = useState(false);
-  const [showCompleted, setShowCompleted] = useState(false);
-  const [newView, setNewView] = useState("");
   const [newTask, setNewTask] = useState(null);
-
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState("");
   let { projectId } = useParams();
   const [statusSelectAnchorEl, setStatusSelectAnchorEl] = useState(null);
-  const [selectedList, setSelectedList] = useState(null);
-  const [listSelectAnchorEl, setListSelectAnchorEl] = useState(null);
-  const [isTaskSelected, setIsTaskSelected] = useState(false);
-  const [selectedProjects, setSelectedProjects] = useState([]);
-  const [expandedPortfolios, setExpandedPortfolios] = useState([]);
-  const [searchPortfolio, setSearchPortfolio] = useState("");
-  const [searchTask, setSearchTask] = useState("");
   const [newTaskStatus, setNewTaskStatus] = useState(null);
-  const [newTaskList, setNewTaskList] = useState(null);
   const [isAddList, setIsAddList] = useState(false);
   const [openCollapsibles, setOpenCollapsibles] = useState([]);
   const [addNewTaskProjectId, setAddNewTaskProjectId] = useState(null);
   const [currMilestoneId, setCurrMilestoneId] = useState(null);
   const [milestones, setMilestones] = useState([]);
   const [isOpenUsers, setIsOpenUsers] = useState(false);
-  const [anchorEl, setAnchorEl] = useState(null);
-  const [anchorElDateNewTask, setAnchorElDateNewTask] = useState(null);
   const [newTaskDueDate, setNewTaskDueDate] = useState(null);
   const [selectedTaskId, setSelectedTaskId] = useState(null);
   const [newTaskAssignee, setNewTaskAssignee] = useState(null);
-  const [selectedDate, setSelectedDate] = useState(null);
   const [isOpendateChange, setIsOpendateChange] = useState(false);
-  const allProjectsRef = useRef(null);
+  const [selectedFilter, setSelectedFilter] = useState(null);
+  const [sortBy, setSortBy] = useState(null);
   const [isOpendateChangeAnchorEl, setIsOpendateChangeAnchorEl] =
     useState(null);
   const [DateRangeVal, setDateRangeVal] = useState([
@@ -130,21 +70,9 @@ function ListViewProjects({ selectedView }) {
   const isOpenTaskDrawer = useSelector(
     (state) => state?.projectTaskSlice?.taskState
   );
-  const open = Boolean(anchorEl);
   const dispatch = useDispatch();
   const displaySuccess = useDisplaySuccess();
   const workspaceId = localStorage.getItem("workspaceId");
-
-  const handleClick = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
-  const handleNewDateClick = (event) => {
-    setAnchorElDateNewTask(event.currentTarget);
-  };
 
   const { data: usersList } = useQuery({
     queryKey: "workspace/workspace_members",
@@ -164,29 +92,31 @@ function ListViewProjects({ selectedView }) {
     refetchOnWindowFocus: false,
   });
 
-  const { mutate: addAssignee } = useMutation({
-    mutationKey: ["task"],
-    mutationFn: (data) => axios.put(`/task`),
-    onSuccess: (data) => {
-      if (data.data.success) {
-        queryClient.invalidateQueries([`${Apis.GetKanbanList}/${projectId}`]);
-        enqueueSnackbar(data.data.message, { variant: "success" });
-      }
-    },
-    onError: (data) => {
-      enqueueSnackbar(data.response.data.message, { variant: "error" });
-    },
-  });
-
-  const handleAssigntoChange = (event) => {
+  const handleAssigntoChange = (event, milesstoneId) => {
     let Id = event.value;
     let payload = {
       assignee: Id,
     };
+    setMilestones((prevMilestones) => {
+      const updatedMilestones = [...prevMilestones];
+      const milestone = updatedMilestones.filter(
+        (el) => el.milestoneId === milesstoneId
+      );
+      milestone[0].newTask.assignee = event;
+      return updatedMilestones;
+    });
     setNewTaskAssignee(payload);
   };
-  const handleDateChange = (date) => {
-    setSelectedDate(date);
+
+  const handleNewTaskTag = (tag, milesstoneId) => {
+    setMilestones((prevMilestones) => {
+      const updatedMilestones = [...prevMilestones];
+      const milestone = updatedMilestones.filter(
+        (el) => el.milestoneId === milesstoneId
+      );
+      milestone[0].newTask.tag = tag;
+      return updatedMilestones;
+    });
   };
 
   const { data: tagsAssignList } = useQuery(
@@ -208,19 +138,46 @@ function ListViewProjects({ selectedView }) {
     const { selection } = ranges;
     setDateRangeVal([selection]);
   };
+  const handleNewTaskDateChange = (ranges, milesstoneId) => {
+    const { selection } = ranges;
+    setMilestones((prevMilestones) => {
+      const updatedMilestones = [...prevMilestones];
+      const milestone = updatedMilestones.filter(
+        (el) => el.milestoneId === milesstoneId
+      );
+
+      milestone[0].newTask.dueDate = ranges.selection;
+      return updatedMilestones;
+    });
+    setDateRangeVal([selection]);
+  };
 
   const onProjectTasksSuccess = (data) => {
     if (data?.data?.success) {
-      data.data?.data.forEach((element) => {
-        element.newTask = { name: "", status: "" };
+      const modifiedMilestones = data.data?.data.map((milestone) => {
+        if (milestone.milestoneName === "Milestone 0") {
+          return { ...milestone, milestoneName: "Untitled" };
+        }
+        return milestone;
       });
-      handleToggle(data.data?.data[0].milestoneId, true);
-      setMilestones(data.data?.data);
+      modifiedMilestones.forEach((element) => {
+        element.newTask = {
+          name: "",
+          status: "",
+          assignee: "",
+          dueDate: "",
+          tag: "",
+        };
+      });
+      handleToggle(modifiedMilestones[0].milestoneId, true);
+      setMilestones(modifiedMilestones);
     }
   };
 
-  const { projectTasks } = useGetKanbanListTasks({
+  const { projectTasks, grtProjectTasks } = useGetKanbanListTasks({
     id: projectId,
+    filter: selectedFilter,
+    sortBy: sortBy,
     onSuccess: onProjectTasksSuccess,
   });
   const { projectStatus } = useGetProjectStatus({
@@ -241,16 +198,11 @@ function ListViewProjects({ selectedView }) {
       label: el.name,
     };
   });
-  const handleAddList = () => {
-    setIsAddList(true);
-  };
+
   const handleListAddClose = () => {
     setIsAddList(false);
   };
 
-  const handleSearch = (event) => {
-    setSearchPortfolio(event.target.value);
-  };
   const onAddProjectBasicSuccess = (data) => {
     displaySuccess(data.message);
     setNewTask(null);
@@ -265,14 +217,6 @@ function ListViewProjects({ selectedView }) {
     onSuccess: onAddProjectBasicSuccess,
   });
 
-  const handleListClick = (option) => {
-    setSelectedList(option);
-    setListSelectAnchorEl(null);
-  };
-  const handleStatusClick = (option) => {
-    setSelectedStatus(option);
-    setStatusSelectAnchorEl(null);
-  };
   const handleStatusSelectClick = (event, project) => {
     if (statusSelectAnchorEl) {
       return setStatusSelectAnchorEl(null);
@@ -292,63 +236,7 @@ function ListViewProjects({ selectedView }) {
     }
     setIsCollapsed(!isCollapsed);
   };
-  const handleFilterClick = (event) => {
-    setFilterAnchorEl(event.currentTarget);
-  };
 
-  const handleMenuClose = () => {
-    setFilterAnchorEl(null);
-  };
-  const handleProjectsMenuClose = () => {
-    setAllProjectsAnchorEl(null);
-  };
-  const handleFilterMenuItemClick = (e, listType) => {
-    const element = allProjectsRef.current;
-    if (listType === "project") {
-      setAllProjectsAnchorEl(element);
-      setFilterBy(listType);
-      setFilterAnchorEl(null);
-      return;
-    }
-    setFilterBy(listType);
-    setFilterAnchorEl(null);
-    setAllProjectsAnchorEl(null);
-  };
-  const handleGroupByClick = (event) => {
-    setGroupByAnchorEl(event.currentTarget);
-  };
-  const handleGroupByMenuClose = () => {
-    setGroupByAnchorEl(null);
-  };
-  const handleGroupByMenuItemClick = (e, listType) => {
-    setActiveGroupBy(listType);
-    setGroupByAnchorEl(null);
-  };
-  const handleViewsMenuClick = (event) => {
-    setViewsAnchorEl(event.currentTarget);
-  };
-  const handleViewsClose = () => {
-    setViewsAnchorEl(null);
-  };
-
-  const handleMenuItemCick = (listType) => {
-    if (listType === "save") {
-      setAddNewView(true);
-      return;
-    }
-    setViewsAnchorEl(null);
-  };
-  const handleSaveView = () => {
-    setAddNewView(false);
-    setViewsAnchorEl(null);
-  };
-  const handleSaveViewCancel = () => {
-    setAddNewView(false);
-    setViewsAnchorEl(null);
-  };
-  const handleSearchTask = (e) => {
-    setSearchTask(e.target.value);
-  };
   const handleNewTaskValue = (project) => {
     return project?.newTask?.name;
   };
@@ -387,29 +275,24 @@ function ListViewProjects({ selectedView }) {
     if (!project.newTask.name) {
       return enqueueSnackbar("Please add task name", { variant: "error" });
     }
-    if (!project?.newTask?.status?.value) {
-      return enqueueSnackbar("Please add task status", { variant: "error" });
-    }
-    if (!newTaskAssignee?.assignee) {
-      return enqueueSnackbar("Please add task assignee", { variant: "error" });
-    }
-    if (!newTaskDueDate) {
-      return enqueueSnackbar("Please add task due date", { variant: "error" });
-    }
-
     const payload = {
       name: project.newTask.name,
       status_Id: project?.newTask?.status?.value,
+      dueDate: project?.newTask?.dueDate?.endDate,
+      assignees: Boolean(project?.newTask?.assignee)
+        ? [project?.newTask?.assignee?.value]
+        : [],
       milestone_Id: project.milestoneId,
-      project_Id: null,
+      project_Id: projectId,
     };
     const data = {
       name: payload.name,
       description: "",
       status_Id: payload.status_Id,
       project_Id: +projectId,
-      dueDate: newTaskDueDate,
-      assignees: [newTaskAssignee.assignee],
+      dueDate: payload.dueDate,
+      milestone_Id: project.milestoneId,
+      assignees: payload.assignees,
       addOnTop: true,
     };
     addProjetBasicTask.mutate({ data: data });
@@ -421,6 +304,9 @@ function ListViewProjects({ selectedView }) {
 
       milestone[0].newTask.name = "";
       milestone[0].newTask.status = "";
+      milestone[0].newTask.dueDate = "";
+      milestone[0].newTask.assignee = "";
+
       return updatedMilestones;
     });
   };
@@ -434,6 +320,7 @@ function ListViewProjects({ selectedView }) {
         if (data?.data?.success) {
           enqueueSnackbar(data.data.message, { variant: "success" });
           queryClient.invalidateQueries([`${Apis.GetKanbanList}/${projectId}`]);
+          grtProjectTasks.refetch();
           setIsOpendateChange(false);
           setIsOpendateChangeAnchorEl(null);
           setSelectedTaskId(null);
@@ -454,6 +341,12 @@ function ListViewProjects({ selectedView }) {
       updateDateRande(payload);
     }
   };
+
+  useEffect(() => {
+    if (!isOpenTaskDrawer) {
+      grtProjectTasks.refetch();
+    }
+  }, [isOpenTaskDrawer]);
   const [selectedTask, setSelectedTask] = useState(null);
   const [selectedMilestone, setSelectedMilestone] = useState(null);
   const [isTaskStatusDropdown, setIsTaskStatusDropdown] = useState(null);
@@ -466,6 +359,21 @@ function ListViewProjects({ selectedView }) {
   const [selectedTaskStatusID, setSelectedTaskStatusID] = useState(null);
   const [selectedTasks, setSelectedTasks] = useState([]);
   const [hoveredAssignee, setHoveredAssignee] = useState(null);
+  const [hoveredTag, setHoveredTag] = useState(null);
+  const [filters, setFilters] = useState([
+    { name: "Incomplete tasks", key: 1 },
+    { name: "Completed Tasks", key: 2 },
+    { name: "All Tasks", key: 3 },
+  ]);
+  const [sortings, setSortings] = useState([
+    { name: "Start Date", key: 1 },
+    { name: "Created on", key: 2 },
+    { name: "Last Modified on", key: 3 },
+    { name: "Likes", key: 4 },
+    { name: "Alphabetical", key: 5 },
+  ]);
+
+  const [hoveredTaskAssignee, setHoveredTaskAssignee] = useState(null);
 
   const newTaskInputRef = useRef();
   const { mutate: updateAssignee, isLoading: updatingAssignee } = useMutation({
@@ -479,6 +387,7 @@ function ListViewProjects({ selectedView }) {
       if (data?.data?.success) {
         enqueueSnackbar(data.data.message, { variant: "success" });
         queryClient.invalidateQueries([`${Apis.GetKanbanList}/${projectId}`]);
+        grtProjectTasks.refetch();
         setSelectedTask(null);
         setSelectedTaskAssigneeID(null);
         setIsTaskAssigneeDropdown(null);
@@ -502,6 +411,7 @@ function ListViewProjects({ selectedView }) {
       if (data?.data?.success) {
         enqueueSnackbar(data.data.message, { variant: "success" });
         queryClient.invalidateQueries([`${Apis.GetKanbanList}/${projectId}`]);
+        grtProjectTasks.refetch();
         setSelectedTask(null);
         setIsTaskTagDropdown(null);
       }
@@ -520,6 +430,7 @@ function ListViewProjects({ selectedView }) {
         if (data?.data?.success) {
           enqueueSnackbar(data.data.message, { variant: "success" });
           queryClient.invalidateQueries([`${Apis.GetKanbanList}/${projectId}`]);
+          grtProjectTasks.refetch();
           setIsTaskStatusDropdown(null);
           setSelectedTask(null);
           setSelectedMilestone(null);
@@ -545,6 +456,7 @@ function ListViewProjects({ selectedView }) {
       if (data?.data?.success) {
         enqueueSnackbar(data.data.message, { variant: "success" });
         queryClient.invalidateQueries([`${Apis.GetKanbanList}/${projectId}`]);
+        grtProjectTasks.refetch();
       }
     },
     onError: (data) => {
@@ -566,7 +478,6 @@ function ListViewProjects({ selectedView }) {
   );
   const loading = updatingTaskOrder;
   const error = updatingTaskOrderError;
-  useDisplayError(error);
   const projectTaskStatusOptions = projectTaskStatus?.map((el) => {
     return {
       value: el.id,
@@ -618,6 +529,7 @@ function ListViewProjects({ selectedView }) {
     setSelectedTaskTagID(tag);
     updateTaskTag();
   };
+  useDisplayError(error || addProjetBasicTask.error);
 
   const onDragEnd = (result) => {
     if (!result.destination) {
@@ -662,11 +574,15 @@ function ListViewProjects({ selectedView }) {
   const { mutate: removeTaskAssignee, isLoading: removeTaskAssigneeLoading } =
     useMutation({
       mutationKey: ["remove_task_assignee"],
-      mutationFn: (id) => axios.delete(`/task/delete_users?id=${id}`),
+      mutationFn: (data) =>
+        axios.delete(
+          `/task/delete_user/${data.taskId}?user_id=${data.assigneeId}`
+        ),
       onSuccess: (data) => {
         if (data.data.success) {
           enqueueSnackbar(data.data.message, { variant: "success" });
           queryClient.invalidateQueries([`${Apis.GetKanbanList}/${projectId}`]);
+          grtProjectTasks.refetch();
           setSelectedTasks([]);
         }
       },
@@ -674,8 +590,8 @@ function ListViewProjects({ selectedView }) {
         enqueueSnackbar(data.response.data.message, { variant: "error" });
       },
     });
-  const handleRemoveTaskAssignee = (id) => {
-    removeTaskAssignee(id);
+  const handleRemoveTaskAssignee = (taskId, id) => {
+    removeTaskAssignee({ taskId: taskId, assigneeId: id });
   };
 
   const handleTaskSelect = (e, task) => {
@@ -705,6 +621,7 @@ function ListViewProjects({ selectedView }) {
         if (data.data.success) {
           enqueueSnackbar(data.data.message, { variant: "success" });
           queryClient.invalidateQueries([`${Apis.GetKanbanList}/${projectId}`]);
+          grtProjectTasks.refetch();
           setSelectedTasks([]);
         }
       },
@@ -723,6 +640,7 @@ function ListViewProjects({ selectedView }) {
             queryClient.invalidateQueries([
               `${Apis.GetKanbanList}/${projectId}`,
             ]);
+            grtProjectTasks.refetch();
             setSelectedTasks([]);
           }
         },
@@ -730,6 +648,7 @@ function ListViewProjects({ selectedView }) {
           enqueueSnackbar(data.response.data.message, { variant: "error" });
         },
       });
+
     const { mutate: completeTasks, isLoading: completeTasksLoading } =
       useMutation({
         mutationKey: ["complete_tasks"],
@@ -740,6 +659,7 @@ function ListViewProjects({ selectedView }) {
             queryClient.invalidateQueries([
               `${Apis.GetKanbanList}/${projectId}`,
             ]);
+            grtProjectTasks.refetch();
             setSelectedTasks([]);
           }
         },
@@ -871,97 +791,32 @@ function ListViewProjects({ selectedView }) {
               <div className="group relative">
                 <button className="px-2 h-7 rounded-md text-[#2F2F2F] hover:text-[#00B8A9] hover:bg-[#eee] flex items-center font-Manrope text-[14px]">
                   <CheckCircleOutlineIcon className="!w-[14px] mr-1" />
-                  Incomplete tasks
+                  {selectedFilter
+                    ? `filter: ${
+                        filters.find((el) => el.key === selectedFilter).name
+                      }`
+                    : "Filter By"}
                 </button>
                 <div
                   tabIndex={0}
                   className=" bg-white invisible border border-[#E8E8E9] rounded w-[200px] right-1 absolute  top-full transition-all opacity-0 group-focus-within:visible group-focus-within:opacity-100 group-focus-within:translate-y-1 z-10"
                 >
                   <ul className="py-1">
-                    <li>
-                      <a
-                        href="#"
-                        className="block px-4 py-2 font-Manrope text-[12px]  hover:bg-[#F2FFFE] hover:text-[#00B8A9] "
-                      >
-                        Incomplete tasks
-                      </a>
-                    </li>
-
-                    <li>
-                      <a
-                        href="#"
-                        className="block px-4 py-2 font-Manrope text-[12px] hover:bg-[#F2FFFE] hover:text-[#00B8A9]"
-                      >
-                        Completed Tasks
-                      </a>
-                    </li>
-
-                    <li>
-                      <a
-                        href="#"
-                        className="block px-4 py-2 font-Manrope text-[12px] hover:bg-[#F2FFFE] hover:text-[#00B8A9]"
-                      >
-                        All Tasks
-                      </a>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-            {/* group by btn  */}
-            <div className="incompleteBtn">
-              <div className="group relative">
-                <button className="px-2 h-7 rounded-md text-[#2F2F2F] hover:text-[#00B8A9] hover:bg-[#eee] flex items-center font-Manrope text-[14px]">
-                  <TableViewIcon className="!w-[14px] mr-1" />
-                  Group By
-                </button>
-                <div
-                  tabIndex={0}
-                  className=" bg-white invisible border border-[#E8E8E9] rounded w-[200px] right-1 absolute  top-full transition-all opacity-0 group-focus-within:visible group-focus-within:opacity-100 group-focus-within:translate-y-1 z-10"
-                >
-                  <ul className="py-1">
-                    <li>
-                      <a
-                        href="#"
-                        className="block px-4 py-2 font-Manrope text-[12px]  hover:bg-[#F2FFFE] hover:text-[#00B8A9] "
-                      >
-                        None
-                      </a>
-                    </li>
-
-                    <li>
-                      <a
-                        href="#"
-                        className="block px-4 py-2 font-Manrope text-[12px] hover:bg-[#F2FFFE] hover:text-[#00B8A9]"
-                      >
-                        Due Date
-                      </a>
-                    </li>
-
-                    <li>
-                      <a
-                        href="#"
-                        className="block px-4 py-2 font-Manrope text-[12px] hover:bg-[#F2FFFE] hover:text-[#00B8A9]"
-                      >
-                        Project
-                      </a>
-                    </li>
-                    <li>
-                      <a
-                        href="#"
-                        className="block px-4 py-2 font-Manrope text-[12px] hover:bg-[#F2FFFE] hover:text-[#00B8A9]"
-                      >
-                        Created By
-                      </a>
-                    </li>
-                    <li>
-                      <a
-                        href="#"
-                        className="block px-4 py-2 font-Manrope text-[12px] hover:bg-[#F2FFFE] hover:text-[#00B8A9]"
-                      >
-                        Custom sections
-                      </a>
-                    </li>
+                    {filters.map((el) => (
+                      <li onClick={() => setSelectedFilter(el.key)}>
+                        <span
+                          className={`cursor-pointer block px-4 py-2 font-Manrope text-[12px]  hover:bg-[#F2FFFE] hover:text-[#00B8A9]
+                          ${
+                            selectedFilter === el.key
+                              ? "text-[#00B8A9] bg-[#F2FFFE]"
+                              : ""
+                          }
+                          `}
+                        >
+                          {el.name}
+                        </span>
+                      </li>
+                    ))}
                   </ul>
                 </div>
               </div>
@@ -971,55 +826,29 @@ function ListViewProjects({ selectedView }) {
               <div className="group relative">
                 <button className="px-2 h-7 rounded-md text-[#2F2F2F] hover:text-[#00B8A9] hover:bg-[#eee] flex items-center font-Manrope text-[14px]">
                   <ImportExportIcon className="!w-[14px] mr-1" />
-                  Sort: Last modified on
+
+                  {sortBy
+                    ? `Sort: ${sortings.find((el) => el.key === sortBy).name}`
+                    : "Sort By"}
                 </button>
                 <div
                   tabIndex={0}
                   className=" bg-white invisible border border-[#E8E8E9] rounded w-[200px] right-1 absolute  top-full transition-all opacity-0 group-focus-within:visible group-focus-within:opacity-100 group-focus-within:translate-y-1 z-10"
                 >
                   <ul className="py-1">
-                    <li>
-                      <a
-                        href="#"
-                        className="block px-4 py-2 font-Manrope text-[12px]  hover:bg-[#F2FFFE] hover:text-[#00B8A9] "
-                      >
-                        Start Date
-                      </a>
-                    </li>
-
-                    <li>
-                      <a
-                        href="#"
-                        className="block px-4 py-2 font-Manrope text-[12px] hover:bg-[#F2FFFE] hover:text-[#00B8A9]"
-                      >
-                        Created on
-                      </a>
-                    </li>
-
-                    <li>
-                      <a
-                        href="#"
-                        className="block px-4 py-2 font-Manrope text-[12px] hover:bg-[#F2FFFE] hover:text-[#00B8A9]"
-                      >
-                        Last Modified on
-                      </a>
-                    </li>
-                    <li>
-                      <a
-                        href="#"
-                        className="block px-4 py-2 font-Manrope text-[12px] hover:bg-[#F2FFFE] hover:text-[#00B8A9]"
-                      >
-                        Likes
-                      </a>
-                    </li>
-                    <li>
-                      <a
-                        href="#"
-                        className="block px-4 py-2 font-Manrope text-[12px] hover:bg-[#F2FFFE] hover:text-[#00B8A9]"
-                      >
-                        Alphabetical
-                      </a>
-                    </li>
+                    {sortings.map((el) => (
+                      <li onClick={() => setSortBy(el.key)}>
+                        <span
+                          className={` cursor-pointer block px-4 py-2 font-Manrope text-[12px]  hover:bg-[#F2FFFE] hover:text-[#00B8A9] 
+                        ${
+                          sortBy === el.key ? "text-[#00B8A9] bg-[#F2FFFE]" : ""
+                        }
+                        `}
+                        >
+                          {el.name}
+                        </span>
+                      </li>
+                    ))}
                   </ul>
                 </div>
               </div>
@@ -1027,9 +856,12 @@ function ListViewProjects({ selectedView }) {
           </div>
         </div>
       </div>
+
+      {/* main body start */}
       <div className="mb-32">
         <div className="overflow-x-auto">
           <div className="min-w-[1400px] pb-5">
+            {/* main column start */}
             <div className="rowTaskView w-full relative mt-5">
               <div className="repeatBlock flex w-full border border-[#eee] border-l-0 border-r-0">
                 <div className="leftTasview-fixed min-w-[49%] w-[49%] pl-[23px] border border-[#eee] border-l-0 border-b-0 border-t-0 py-2 px-2 hover:bg-[#E7F7F6] cursor-pointer">
@@ -1077,6 +909,7 @@ function ListViewProjects({ selectedView }) {
                 </div>
               </div>
             </div>
+            {/* main column end */}
 
             {/* render milestones here */}
             {/* paste milestones */}
@@ -1146,6 +979,7 @@ function ListViewProjects({ selectedView }) {
                             >
                               {el.tasks.length ? (
                                 el.tasks.map((elem, index) => {
+                                  console.log(elem.statusName);
                                   return (
                                     <>
                                       <Draggable
@@ -1204,20 +1038,17 @@ function ListViewProjects({ selectedView }) {
 
                                                       <label
                                                         for="taskName"
-                                                        className="relative cursor-pointer text-[13px] text-[#313135]"
+                                                        className={`relative cursor-pointer text-[13px] ${
+                                                          elem.statusName !==
+                                                          "Completed"
+                                                            ? "text-[#333334]"
+                                                            : "text-[#afafb1]"
+                                                        } `}
                                                       >
                                                         {elem.name}
                                                       </label>
                                                     </div>
                                                     <div className="flex items-center relative">
-                                                      {/* <span className="cursor-pointer w-[24px] h-[20px] flex justify-center items-center rounded-md hover:bg-[#efefef]">
-                                        <Tooltip
-                                          title="Move task between section"
-                                          arrow
-                                        >
-                                          <ImportExportIcon className="!w-[16px] mr-1" />
-                                        </Tooltip>
-                                      </span> */}
                                                       <span className="cursor-pointer w-[24px] h-[20px] flex justify-center items-center rounded-md hover:bg-[#efefef]">
                                                         <Tooltip
                                                           title="Details"
@@ -1248,7 +1079,14 @@ function ListViewProjects({ selectedView }) {
                                                     className="leftTasview-screen min-w-[10%] w-[10%] border-l border-l-[#eee] py-2 px-2 hover:bg-[#E7F7F6] cursor-pointer relative before:absolute before:w-full before:left-0 before:top-0 before:h-full before:border before:border-[#fafbfd] before:hover:border-[#ccc] text-[#E7F7F6] hover:text-[#313135]"
                                                   >
                                                     <p className="text-[13px] flex justify-between">
-                                                      <span className="text-[#313135]">
+                                                      <span
+                                                        className={`${
+                                                          elem.statusName !==
+                                                          "Completed"
+                                                            ? "text-[#333334]"
+                                                            : "text-[#afafb1]"
+                                                        }`}
+                                                      >
                                                         {elem.statusName}
                                                       </span>
                                                     </p>
@@ -1337,27 +1175,71 @@ function ListViewProjects({ selectedView }) {
                                                         elem
                                                       )
                                                     }
-                                                    onMouseEnter={() =>
-                                                      setHoveredAssignee(
-                                                        elem.taskId
-                                                      )
-                                                    }
-                                                    onMouseLeave={() =>
-                                                      setHoveredAssignee(null)
-                                                    }
                                                     className="leftTasview-screen min-w-[10%] w-[10%] border-l border-l-[#eee] overflow-hidden py-2 px-2 hover:bg-[#E7F7F6] relative  before:border before:border-[#fafbfd] before:hover:border-[#ccc] cursor-pointer"
                                                   >
                                                     {elem?.assignees?.length ? (
                                                       elem?.assignees?.map(
                                                         (assignee) => (
-                                                          <div className="dropdown inline-block relative mr-2 ">
-                                                            <button className="py-[3px] px-[5px] border-0 inline-flex items-center bg-[#ff735f] text-[12px] font-medium rounded-[4px]">
+                                                          <div
+                                                            onMouseEnter={() => {
+                                                              setHoveredAssignee(
+                                                                assignee.id
+                                                              );
+                                                              setHoveredTaskAssignee(
+                                                                elem.taskId
+                                                              );
+                                                            }}
+                                                            onMouseLeave={() => {
+                                                              setHoveredAssignee(
+                                                                null
+                                                              );
+                                                              setHoveredTaskAssignee(
+                                                                null
+                                                              );
+                                                            }}
+                                                            className="dropdown  inline-block relative mr-2 "
+                                                          >
+                                                            <button className="py-[3px] mb-1 px-[5px] border-0 inline-flex items-center bg-[#ff735f] text-[12px] font-medium rounded-[4px]">
                                                               <span className="items-center inline-flex text-white align-middle">
-                                                                {assignee.name
-                                                                  ?.substr(0, 2)
-                                                                  ?.toUpperCase()}
+                                                                {assignee?.name
+                                                                  ? assignee.name
+                                                                      ?.substr(
+                                                                        0,
+                                                                        2
+                                                                      )
+                                                                      ?.toUpperCase()
+                                                                  : "Untitled"}
                                                               </span>
                                                             </button>
+                                                            {hoveredAssignee ===
+                                                              assignee.id &&
+                                                              hoveredTaskAssignee ===
+                                                                elem.taskId && (
+                                                                <span
+                                                                  className="cursor-pointer absolute -top-[10px] -right-[5px]"
+                                                                  onClick={(
+                                                                    e
+                                                                  ) => {
+                                                                    e.stopPropagation();
+                                                                    setSelectedTask(
+                                                                      elem
+                                                                    );
+                                                                    handleRemoveTaskAssignee(
+                                                                      elem.taskId,
+                                                                      assignee.id
+                                                                    );
+                                                                  }}
+                                                                >
+                                                                  <CancelIcon
+                                                                    sx={{
+                                                                      fontSize:
+                                                                        "17px",
+                                                                      color:
+                                                                        "#333346",
+                                                                    }}
+                                                                  />
+                                                                </span>
+                                                              )}
                                                           </div>
                                                         )
                                                       )
@@ -1371,28 +1253,6 @@ function ListViewProjects({ selectedView }) {
                                                           </span>
                                                         </button>
                                                       </div>
-                                                    )}
-                                                    {hoveredAssignee ===
-                                                      elem.taskId && (
-                                                      <>
-                                                        {elem?.assignees
-                                                          ?.length ? (
-                                                          <span
-                                                            className="ml-1 cursor-pointer"
-                                                            onClick={(e) => {
-                                                              e.stopPropagation();
-                                                              setSelectedTask(
-                                                                elem
-                                                              );
-                                                              handleRemoveTaskAssignee(
-                                                                elem.taskId
-                                                              );
-                                                            }}
-                                                          >
-                                                            &#x2716;{" "}
-                                                          </span>
-                                                        ) : null}
-                                                      </>
                                                     )}
                                                   </div>
                                                   {Boolean(
@@ -1501,7 +1361,14 @@ function ListViewProjects({ selectedView }) {
                                                           <span className="text-[12px] mr-1 ">
                                                             <AccessAlarmsIcon className="!w-[18px]" />
                                                           </span>
-                                                          <span className="text-[#313135]">
+                                                          <span
+                                                            className={`${
+                                                              elem.statusName !==
+                                                              "Completed"
+                                                                ? "text-[#333334]"
+                                                                : "text-[#afafb1]"
+                                                            }`}
+                                                          >
                                                             {formateDate(
                                                               elem.dueDate
                                                             )}
@@ -1612,15 +1479,59 @@ function ListViewProjects({ selectedView }) {
                                                   >
                                                     {elem?.tags?.length ? (
                                                       elem?.tags?.map((tag) => (
-                                                        <div className="dropdown inline-block relative mr-2 ">
+                                                        <div
+                                                          onMouseEnter={() => {
+                                                            setHoveredTag(
+                                                              tag.id
+                                                            );
+                                                            setHoveredTaskAssignee(
+                                                              elem.taskId
+                                                            );
+                                                          }}
+                                                          onMouseLeave={() => {
+                                                            setHoveredTag(null);
+                                                            setHoveredTaskAssignee(
+                                                              null
+                                                            );
+                                                          }}
+                                                          className="dropdown inline-block relative mr-2 "
+                                                        >
                                                           <button
-                                                            className={`py-[3px] px-[5px] border-0 inline-flex items-center bg-[${tag.color}] text-[12px] font-medium rounded-[4px]`}
+                                                            className={`py-[3px] mb-1 px-[5px] border-0 inline-flex items-center bg-[${tag.color}] text-[12px] font-medium rounded-[4px]`}
                                                           >
                                                             <span className="items-center inline-flex text-white align-middle">
                                                               {tag.name}
                                                               <span></span>
                                                             </span>
                                                           </button>
+                                                          {hoveredTag ===
+                                                            tag.id &&
+                                                            hoveredTaskAssignee ===
+                                                              elem.taskId && (
+                                                              <span
+                                                                className="ml-1 cursor-pointer absolute -top-[10px] -right-[5px]"
+                                                                onClick={(
+                                                                  e
+                                                                ) => {
+                                                                  e.stopPropagation();
+                                                                  setSelectedTask(
+                                                                    elem
+                                                                  );
+                                                                  handleTaskTagChange(
+                                                                    tag?.id
+                                                                  );
+                                                                }}
+                                                              >
+                                                                <CancelIcon
+                                                                  sx={{
+                                                                    fontSize:
+                                                                      "17px",
+                                                                    color:
+                                                                      "#333346",
+                                                                  }}
+                                                                />
+                                                              </span>
+                                                            )}
                                                         </div>
                                                       ))
                                                     ) : (
@@ -1725,7 +1636,7 @@ function ListViewProjects({ selectedView }) {
                               ) : (
                                 <div className="row-tasks border border-solid border-b border-b-[#e5e9f1] border-l-0 border-r-0 border-t-0">
                                   <div className="flex">
-                                    <p className="text-[13px] ml-[20px] text-[#313135] ">
+                                    <p className="pl-[12px] py-[12px] text-[12px] ml-[20px] text-[#8e94bb] ">
                                       No task found
                                     </p>
                                   </div>
@@ -1736,143 +1647,75 @@ function ListViewProjects({ selectedView }) {
                           )}
                         </Droppable>
                       </DragDropContext>
-                      {milestoneIndex === 0 && (
-                        <div className="rowTaskView w-full relative mt-5">
-                          <div className="repeatBlock flex w-full border border-[#eee] border-l-0 border-r-0">
-                            <div className="leftTasview-fixed min-w-[49%] w-[49%] pl-[23px] border border-[#eee] border-l-0 border-b-0 border-t-0 py-2 px-2 hover:bg-[#E7F7F6] cursor-pointer">
-                              <div className="flex justify-between w-full ">
-                                <svg
-                                  onClick={() => handleTaskSubmit(el)}
-                                  className="icon text-[#8e94bb] mt-2 ml-2"
-                                  width="1em"
-                                  height="1em"
-                                  viewBox="0 0 12 12"
-                                  version="1.1"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                >
-                                  <path
-                                    fillRule="evenodd"
-                                    clipRule="evenodd"
-                                    d="M6.66667 0.666569C6.66667 0.296631 6.36819 0 6 0C5.62924 0 5.33333 0.298433 5.33333 0.666569V5.33333H0.666569C0.296631 5.33333 0 5.63181 0 6C0 6.37076 0.298433 6.66667 0.666569 6.66667H5.33333V11.3334C5.33333 11.7034 5.63181 12 6 12C6.37076 12 6.66667 11.7016 6.66667 11.3334V6.66667H11.3334C11.7034 6.66667 12 6.36819 12 6C12 5.62924 11.7016 5.33333 11.3334 5.33333H6.66667V0.666569Z"
-                                    fill="currentColor"
-                                  />
-                                </svg>
-                                <input
-                                  type="text"
-                                  id={el.id}
-                                  placeholder="Add a Task"
-                                  className="border-none bg-transparent w-full h-full py-2 text-[#313135] text-[13px]"
-                                  name="name"
-                                  ref={newTaskInputRef}
-                                  value={handleNewTaskValue(el)}
-                                  onChange={(e) =>
-                                    handleNewTask(e, el.milestoneId)
-                                  }
+                      <div className="rowTaskView w-full relative mt-5">
+                        <div className="repeatBlock flex w-full border border-[#eee] border-l-0 border-r-0">
+                          <div className="leftTasview-fixed min-w-[49%] w-[49%] pl-[23px] border border-[#eee] border-l-0 border-b-0 border-t-0 py-2 px-2 hover:bg-[#E7F7F6] cursor-pointer">
+                            <div className="flex justify-between w-full ">
+                              <svg
+                                onClick={() => handleTaskSubmit(el)}
+                                className="icon text-[#8e94bb] mt-2 ml-2"
+                                width="1em"
+                                height="1em"
+                                viewBox="0 0 12 12"
+                                version="1.1"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  clipRule="evenodd"
+                                  d="M6.66667 0.666569C6.66667 0.296631 6.36819 0 6 0C5.62924 0 5.33333 0.298433 5.33333 0.666569V5.33333H0.666569C0.296631 5.33333 0 5.63181 0 6C0 6.37076 0.298433 6.66667 0.666569 6.66667H5.33333V11.3334C5.33333 11.7034 5.63181 12 6 12C6.37076 12 6.66667 11.7016 6.66667 11.3334V6.66667H11.3334C11.7034 6.66667 12 6.36819 12 6C12 5.62924 11.7016 5.33333 11.3334 5.33333H6.66667V0.666569Z"
+                                  fill="currentColor"
                                 />
-                              </div>
+                              </svg>
+                              <input
+                                type="text"
+                                id={el.id}
+                                placeholder="Add a Task"
+                                className="border-none bg-transparent w-full h-full py-2 text-[#313135] text-[13px]"
+                                name="name"
+                                ref={
+                                  milestoneIndex === 0 ? newTaskInputRef : null
+                                }
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    handleTaskSubmit(el);
+                                  }
+                                }}
+                                value={handleNewTaskValue(el)}
+                                onChange={(e) =>
+                                  handleNewTask(e, el.milestoneId)
+                                }
+                              />
                             </div>
-                            <div className="leftTasview-screen min-w-[10%] w-[10%] border border-[#eee] border-l-0 border-b-0 border-t-0 py-2 px-2 hover:bg-[#E7F7F6] cursor-pointer text-[#E7F7F6] hover:text-[#313135]">
-                              <div className="flex items-center  relative p-[10px_13px]">
-                                <PopupState
-                                  variant="popover"
-                                  popupId="demo-popup-popover"
-                                >
-                                  {(popupState) => (
-                                    <div>
-                                      <div
-                                        {...bindTrigger(popupState)}
-                                        className=" cursor-pointer rounded-md "
+                          </div>
+                          <div className="leftTasview-screen min-w-[10%] w-[10%] border border-[#eee] border-l-0 border-b-0 border-t-0 py-2 px-2 hover:bg-[#E7F7F6] cursor-pointer text-[#E7F7F6] hover:text-[#313135]">
+                            <div className="flex items-center  relative p-[10px_13px]">
+                              <PopupState
+                                variant="popover"
+                                popupId="demo-popup-popover"
+                              >
+                                {(popupState) => (
+                                  <div>
+                                    <div
+                                      {...bindTrigger(popupState)}
+                                      className=" cursor-pointer rounded-md "
+                                    >
+                                      <button
+                                        className="flex items-center text-[#313135] text-[13px]"
+                                        onClick={(e) => {
+                                          handleStatusSelectClick(e, el);
+                                          setIsOpenUsers(true);
+                                        }}
                                       >
-                                        <button
-                                          className="flex items-center text-[#313135] text-[13px]"
-                                          onClick={(e) => {
-                                            handleStatusSelectClick(e, el);
-                                            setIsOpenUsers(true);
-                                          }}
-                                        >
-                                          {Boolean(el.newTask.status)
-                                            ? el.newTask.status.label
-                                            : "Select status"}
-                                        </button>
-                                      </div>
-                                      {isOpenUsers &&
-                                        currMilestoneId === el.milestoneId && (
-                                          <Popover
-                                            onClose={() =>
-                                              setIsOpenUsers(false)
-                                            }
-                                            {...bindPopover(popupState)}
-                                            anchorOrigin={{
-                                              vertical: "bottom",
-                                              horizontal: "center",
-                                            }}
-                                            transformOrigin={{
-                                              vertical: "top",
-                                              horizontal: "center",
-                                            }}
-                                          >
-                                            <Box
-                                              sx={{
-                                                width: "200px",
-                                                height: "200px",
-                                                overflow: "auto",
-                                              }}
-                                            >
-                                              <div className="mt-2 px-2">
-                                                <Autocomplete
-                                                  disablePortal
-                                                  id="combo-box-demo"
-                                                  options={projectStatusOptions}
-                                                  className="w-full"
-                                                  value={
-                                                    el?.newTask?.status ?? ""
-                                                  }
-                                                  onChange={(event, value) =>
-                                                    handleNewTaskStatus(
-                                                      value,
-                                                      el.milestoneId
-                                                    )
-                                                  }
-                                                  renderInput={(params) => (
-                                                    <TextField
-                                                      {...params}
-                                                      label="Select Status"
-                                                    />
-                                                  )}
-                                                />
-                                              </div>
-                                            </Box>
-                                          </Popover>
-                                        )}
+                                        {Boolean(el.newTask.status)
+                                          ? el.newTask.status.label
+                                          : "Select status"}
+                                      </button>
                                     </div>
-                                  )}
-                                </PopupState>
-                              </div>
-                            </div>
-
-                            <div className="leftTasview-screen min-w-[10%] w-[10%] border border-[#eee] border-l-0 border-b-0 border-t-0 py-2 px-2 hover:bg-[#E7F7F6] cursor-pointer text-[#E7F7F6] hover:text-[#313135]">
-                              <div className="flex items-center  relative p-[10px_13px]">
-                                <div>
-                                  <PopupState
-                                    variant="popover"
-                                    popupId="demo-popup-popover"
-                                  >
-                                    {(popupState) => (
-                                      <div>
-                                        <div
-                                          {...bindTrigger(popupState)}
-                                          className="w-max cursor-pointer text-[13px] text-[#313135]  flex items-center justify-center"
-                                        >
-                                          {newTaskAssignee
-                                            ? usersList.filter(
-                                                (users) =>
-                                                  users.value ===
-                                                  newTaskAssignee.assignee
-                                              )[0].label
-                                            : "Select Assignee"}
-                                        </div>
-
+                                    {isOpenUsers &&
+                                      currMilestoneId === el.milestoneId && (
                                         <Popover
+                                          onClose={() => setIsOpenUsers(false)}
                                           {...bindPopover(popupState)}
                                           anchorOrigin={{
                                             vertical: "bottom",
@@ -1883,168 +1726,293 @@ function ListViewProjects({ selectedView }) {
                                             horizontal: "center",
                                           }}
                                         >
-                                          <Box
-                                            sx={{
-                                              width: "200px",
-                                              height: "200px",
-                                              overflow: "auto",
-                                            }}
+                                          <div
+                                            tabIndex={0}
+                                            className=" bg-white  border border-[#E8E8E9] rounded w-[170px]  "
                                           >
-                                            <div className="mt-2 px-2">
-                                              <Select
-                                                options={usersList}
-                                                placeholder="Search..."
-                                                onChange={(e) =>
-                                                  handleAssigntoChange(e)
-                                                }
-                                              />
-                                            </div>
-                                          </Box>
+                                            <ul className="py-1">
+                                              {projectStatusOptions?.length ? (
+                                                projectStatusOptions?.map(
+                                                  (projectStatus) => (
+                                                    <li
+                                                      key={projectStatus.value}
+                                                    >
+                                                      <span
+                                                        onClick={(value) =>
+                                                          handleNewTaskStatus(
+                                                            projectStatus,
+                                                            el.milestoneId
+                                                          )
+                                                        }
+                                                        className=" cursor-pointer block px-4 py-2 font-Manrope text-[12px]  hover:bg-[#F2FFFE] hover:text-[#00B8A9] "
+                                                      >
+                                                        {projectStatus.label}
+                                                      </span>
+                                                    </li>
+                                                  )
+                                                )
+                                              ) : (
+                                                <li>
+                                                  <span className=" cursor-pointer block px-4 py-2 font-Manrope text-[12px]  hover:bg-[#F2FFFE] hover:text-[#00B8A9] ">
+                                                    No status found
+                                                  </span>
+                                                </li>
+                                              )}
+                                            </ul>
+                                          </div>
                                         </Popover>
-                                      </div>
-                                    )}
-                                  </PopupState>
-                                </div>
-                              </div>
+                                      )}
+                                  </div>
+                                )}
+                              </PopupState>
                             </div>
-                            <div className="leftTasview-screen min-w-[10%] w-[10%] border border-[#eee] border-l-0 border-b-0 border-t-0 py-2 px-2 hover:bg-[#E7F7F6] cursor-pointer text-[#E7F7F6] hover:text-[#313135]">
-                              <div className="flex items-center  relative p-[10px_13px]">
-                                <p
-                                  className="text-[13px] text-[#313135]"
-                                  onClick={handleNewDateClick}
-                                >
-                                  {newTaskDueDate
-                                    ? new Date(
-                                        newTaskDueDate
-                                      ).toLocaleDateString()
-                                    : "Select Date"}
-                                </p>
+                          </div>
 
-                                <div>
-                                  <Menu
-                                    id="basic-menu"
-                                    anchorEl={anchorElDateNewTask}
-                                    open={Boolean(anchorElDateNewTask)}
-                                    onClose={() => setAnchorElDateNewTask(null)}
-                                    sx={{ marginTop: "2px" }}
-                                    MenuListProps={{
-                                      "aria-labelledby": "basic-button",
-                                    }}
-                                  >
-                                    <LocalizationProvider
-                                      dateAdapter={AdapterDateFns}
-                                    >
-                                      <DatePicker
-                                        label={""}
-                                        sx={{ width: "100%", height: "100%" }}
-                                        slotProps={{
-                                          popper: {
-                                            sx: {
-                                              zIndex: 9999999,
-                                            },
-                                          },
+                          <div className="leftTasview-screen min-w-[10%] w-[10%] border border-[#eee] border-l-0 border-b-0 border-t-0 py-2 px-2 hover:bg-[#E7F7F6] cursor-pointer text-[#E7F7F6] hover:text-[#313135]">
+                            <div className="flex items-center  relative p-[10px_13px]">
+                              <div>
+                                <PopupState
+                                  variant="popover"
+                                  popupId="demo-popup-popover"
+                                >
+                                  {(popupState) => (
+                                    <div>
+                                      <div
+                                        {...bindTrigger(popupState)}
+                                        className="w-max cursor-pointer text-[13px] text-[#313135]  flex items-center justify-center"
+                                      >
+                                        {Boolean(el?.newTask?.assignee)
+                                          ? usersList.filter(
+                                              (users) =>
+                                                users.value ===
+                                                el.newTask.assignee.value
+                                            )[0]?.label
+                                          : "Select Assignee"}
+                                      </div>
+
+                                      <Popover
+                                        {...bindPopover(popupState)}
+                                        anchorOrigin={{
+                                          vertical: "bottom",
+                                          horizontal: "center",
                                         }}
-                                        onChange={(date) =>
-                                          setNewTaskDueDate(date)
-                                        }
-                                        value={
-                                          newTaskDueDate
-                                            ? moment(newTaskDueDate).toDate()
-                                            : null
-                                        }
-                                      />
-                                    </LocalizationProvider>
-                                  </Menu>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="leftTasview-screen min-w-[10%] w-[10%] border border-[#eee] border-l-0 border-b-0 border-t-0 py-2 px-2 hover:bg-[#E7F7F6] cursor-pointer text-[#E7F7F6] hover:text-[#313135]">
-                              <div className="flex items-center  relative p-[10px_13px]">
-                                <p
-                                  className="text-[13px] text-[#313135]"
-                                  onClick={handleClick}
-                                >
-                                  {tagId
-                                    ? periorityTag
-                                        ?.filter((tags) => tags?.id === tagId)
-                                        .map((tag) => (
-                                          <div className="dropdown inline-block relative mr-2 ">
-                                            <button
-                                              className={`py-[3px] px-[5px] border-0 inline-flex items-center bg-[${tag.color}] text-[12px] font-medium rounded-[4px]`}
-                                            >
-                                              <span className="items-center inline-flex text-white align-middle">
-                                                {tag.name}
-                                                <span></span>
-                                              </span>
-                                            </button>
-                                          </div>
-                                        ))
-                                    : "Add tags"}
-                                </p>
-
-                                <div>
-                                  <Menu
-                                    id="basic-menu"
-                                    anchorEl={anchorEl}
-                                    open={open}
-                                    onClose={handleClose}
-                                    sx={{ marginTop: "2px" }}
-                                    MenuListProps={{
-                                      "aria-labelledby": "basic-button",
-                                    }}
-                                  >
-                                    <MenuItem
-                                      sx={{
-                                        width: "auto",
-                                        height: "",
-                                        overflow: "auto",
-                                        background: "white",
-                                        padding: "9px",
-                                      }}
-                                    >
-                                      <div className="flex flex-col">
-                                        <div className="h-[auto] overflow-auto ">
-                                          <div className="mb-4">Tags</div>
-
-                                          <div>
-                                            {periorityTag?.map((val) => {
-                                              return (
+                                        transformOrigin={{
+                                          vertical: "top",
+                                          horizontal: "center",
+                                        }}
+                                      >
+                                        <div
+                                          tabIndex={0}
+                                          className=" bg-white  border border-[#E8E8E9] rounded w-[270px]  "
+                                        >
+                                          <ul className="py-1">
+                                            {usersList?.map((users) => (
+                                              <li
+                                                key={users.value}
+                                                className="mb-3"
+                                              >
                                                 <div
-                                                  onClick={() => {
-                                                    setTagId(val?.id);
-                                                    // updateTags(val?.id);
-                                                  }}
-                                                  className={`w-full h-[30px] p-2 text-white rounded flex items-center font-[500] justify-center mb-1`}
-                                                  style={{
-                                                    background: val.color,
-                                                    color: val?.textColor,
-                                                    fontSize: "0.8rem",
-                                                  }}
+                                                  onClick={() =>
+                                                    handleAssigntoChange(
+                                                      users,
+                                                      el.milestoneId
+                                                    )
+                                                  }
+                                                  className="flex items-center px-4 py-2 font-Manrope text-[12px]  hover:bg-[#F2FFFE] hover:text-[#00B8A9] "
                                                 >
-                                                  <h1 className="">
-                                                    {val.name} &nbsp;{" "}
-                                                    {val?.id === tagId && (
-                                                      <CheckIcon
-                                                        sx={{
-                                                          fontSize: "18px",
-                                                        }}
-                                                      />
-                                                    )}{" "}
-                                                  </h1>
+                                                  <span className="w-[24px] h-[24px] mr-[5px] rounded-full bg-[#4775d5] flex justify-center items-center text-white text-[11px] font-Manrope font-medium">
+                                                    {users.label
+                                                      .substr(0, 2)
+                                                      ?.toUpperCase()}
+                                                  </span>
+                                                  {users.label}{" "}
+                                                  <em className="text-[#666] ml-2 not-italic">
+                                                    {users.email}
+                                                  </em>
                                                 </div>
-                                              );
-                                            })}
-                                          </div>
+                                              </li>
+                                            ))}
+                                          </ul>
                                         </div>
-                                      </div>
-                                    </MenuItem>
-                                  </Menu>
-                                </div>
+                                      </Popover>
+                                    </div>
+                                  )}
+                                </PopupState>
                               </div>
                             </div>
                           </div>
+                          <div className="leftTasview-screen min-w-[10%] w-[12%] border border-[#eee] border-l-0 border-b-0 border-t-0 py-2 px-2 hover:bg-[#E7F7F6] cursor-pointer text-[#E7F7F6] hover:text-[#313135]">
+                            <div className="flex items-center  relative p-[10px_13px]">
+                              <div>
+                                <PopupState
+                                  variant="popover"
+                                  popupId="demo-popup-popover"
+                                >
+                                  {(popupState) => (
+                                    <div>
+                                      <div
+                                        {...bindTrigger(popupState)}
+                                        className="w-max cursor-pointer text-[13px] text-[#313135]  flex items-center justify-center"
+                                      >
+                                        {Boolean(el?.newTask?.dueDate)
+                                          ? `${new Date(
+                                              el?.newTask?.dueDate?.startDate
+                                            ).toLocaleDateString()} - ${new Date(
+                                              el?.newTask?.dueDate?.endDate
+                                            ).toLocaleDateString()}`
+                                          : "Select Date"}
+                                      </div>
+
+                                      <Popover
+                                        {...bindPopover(popupState)}
+                                        sx={{
+                                          "& .MuiPaper-root": {
+                                            boxShadow: "none", // Remove the box shadow
+                                          },
+                                        }}
+                                        anchorOrigin={{
+                                          vertical: "bottom",
+                                          horizontal: "center",
+                                        }}
+                                        transformOrigin={{
+                                          vertical: "top",
+                                          horizontal: "center",
+                                        }}
+                                      >
+                                        <div>
+                                          <DateRangePicker
+                                            onChange={(ranges) =>
+                                              handleNewTaskDateChange(
+                                                ranges,
+                                                el.milestoneId
+                                              )
+                                            }
+                                            showSelectionPreview={true}
+                                            moveRangeOnFirstSelection={false}
+                                            months={2}
+                                            ranges={DateRangeVal}
+                                            direction="horizontal"
+                                          />
+                                        </div>
+                                      </Popover>
+                                    </div>
+                                  )}
+                                </PopupState>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="leftTasview-screen min-w-[10%] w-[10%] border border-[#eee] border-l-0 border-b-0 border-t-0 py-2 px-2 hover:bg-[#E7F7F6] cursor-pointer text-[#E7F7F6] hover:text-[#313135]">
+                            <div className="flex items-center  relative p-[10px_13px]">
+                              <PopupState
+                                variant="popover"
+                                popupId="demo-popup-popover"
+                              >
+                                {(popupState) => (
+                                  <div>
+                                    <p
+                                      {...bindTrigger(popupState)}
+                                      className="text-[13px] text-[#313135]"
+                                      // onClick={handleClick}
+                                    >
+                                      {Boolean(el?.newTask?.tag)
+                                        ? periorityTag
+                                            ?.filter(
+                                              (tags) =>
+                                                tags?.id ===
+                                                el?.newTask?.tag?.id
+                                            )
+                                            .map((tag) => (
+                                              <div className="dropdown inline-block relative mr-2 ">
+                                                <button
+                                                  className={`py-[3px] px-[5px] border-0 inline-flex items-center bg-[${tag.color}] text-[12px] font-medium rounded-[4px]`}
+                                                >
+                                                  <span className="items-center inline-flex text-white align-middle">
+                                                    {tag.name}
+                                                    <span></span>
+                                                  </span>
+                                                </button>
+                                              </div>
+                                            ))
+                                        : "Add tags"}
+                                    </p>
+
+                                    <Popover
+                                      {...bindPopover(popupState)}
+                                      sx={{
+                                        "& .MuiPaper-root": {
+                                          boxShadow: "none", // Remove the box shadow
+                                        },
+                                      }}
+                                      anchorOrigin={{
+                                        vertical: "bottom",
+                                        horizontal: "center",
+                                      }}
+                                      transformOrigin={{
+                                        vertical: "top",
+                                        horizontal: "center",
+                                      }}
+                                    >
+                                      <div>
+                                        <MenuItem
+                                          sx={{
+                                            width: "auto",
+                                            height: "",
+                                            overflow: "auto",
+                                            background: "white",
+                                            padding: "9px",
+                                          }}
+                                        >
+                                          <div className="flex flex-col">
+                                            <div className="h-[auto] overflow-auto ">
+                                              <div className="mb-4">Tags</div>
+
+                                              <div>
+                                                {periorityTag?.map((val) => {
+                                                  return (
+                                                    <div
+                                                      onClick={() => {
+                                                        setTagId(val?.id);
+                                                        handleNewTaskTag(
+                                                          val,
+                                                          el.milestoneId
+                                                        );
+                                                        // updateTags(val?.id);
+                                                      }}
+                                                      className={`w-full h-[30px] p-2 text-white rounded flex items-center font-[500] justify-center mb-1`}
+                                                      style={{
+                                                        background: val.color,
+                                                        color: val?.textColor,
+                                                        fontSize: "0.8rem",
+                                                      }}
+                                                    >
+                                                      <h1 className="">
+                                                        {val.name} &nbsp;{" "}
+                                                        {val?.id ===
+                                                          el?.newTask?.tag
+                                                            ?.id && (
+                                                          <CheckIcon
+                                                            sx={{
+                                                              fontSize: "18px",
+                                                            }}
+                                                          />
+                                                        )}{" "}
+                                                      </h1>
+                                                    </div>
+                                                  );
+                                                })}
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </MenuItem>
+                                      </div>
+                                    </Popover>
+                                  </div>
+                                )}
+                              </PopupState>
+                            </div>
+                          </div>
                         </div>
-                      )}
+                      </div>
                     </div>
                   </>
                 );
@@ -2099,40 +2067,3 @@ function ListViewProjects({ selectedView }) {
 }
 
 export default ListViewProjects;
-
-const Dropdowns = ({
-  id,
-  anchor,
-  handleClose,
-  options,
-  handleMenuClick,
-  activeMenu,
-}) => {
-  return (
-    <Menu
-      id={id}
-      anchorEl={anchor}
-      open={Boolean(anchor)}
-      onClose={handleClose}
-    >
-      {options.map((el) => (
-        <MenuItem
-          onClick={(e) => handleMenuClick(e, el.name)}
-          selected={activeMenu === el.name}
-          className={`hover:text-[#00a99b]  ${
-            activeMenu === el.name && "!bg-[#F2FFFE] text-[#00a99b]"
-          }`}
-        >
-          <div
-            className={`flex items-center hover:text-[#00a99b] p-[0px 17px] ${
-              activeMenu === el.name && "!bg-[#F2FFFE] text-[#00a99b]"
-            }`}
-          >
-            {el.icon(el)}
-            <p className="ml-[10px] text-[13px]">{el.label}</p>
-          </div>
-        </MenuItem>
-      ))}
-    </Menu>
-  );
-};

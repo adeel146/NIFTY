@@ -41,7 +41,7 @@ import CheckIcon from "@mui/icons-material/Check";
 import HookTextField from "hooks/Common/HookTextField";
 import { useForm } from "react-hook-form";
 import { useSnackbar } from "notistack";
-import { useMutation } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation } from "@tanstack/react-query";
 import { useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import * as yup from "yup";
@@ -84,6 +84,12 @@ import Tooltip from "@mui/material/Tooltip";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import { DateCalendar } from "@mui/x-date-pickers";
+import CancelIcon from "@mui/icons-material/Cancel";
+import CircleOutlinedIcon from "@mui/icons-material/CircleOutlined";
+import CircleIcon from "@mui/icons-material/Circle";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CircularProgress from "@mui/material/CircularProgress";
+import { useInView } from "react-intersection-observer";
 
 const useStyles = makeStyles((theme) => ({
   datePickerInput: {
@@ -134,8 +140,13 @@ const TaskDrwayer = ({ taskListId }) => {
   const [selectedDependencyID, setSelectedDependencyID] = useState(null);
   const [filterAssigneeValue, setFilterAssigneeValue] = useState("");
   const [filterDependencyValue, setFilterDependencyValue] = useState("");
-
-  console.log(dueDate, "dueDate");
+  const [isShown, setIsShown] = useState(false);
+  const [isMilestoneDropdown, setIsMilestoneDropdown] = useState(null);
+  const [selectedMilstoneId, setSelectedMilstoneId] = useState(null);
+  const [filterMilstoneValue, setFilterMilesoneValue] = useState("");
+  const [isTagDeleteShow, setIsTagDeleteShow] = useState(false);
+  const [priorityIconShow, setPriorityIconShow] = useState(false);
+  const [riskStatusShow, setRiskStatusShow] = useState(false);
 
   const [DateRangeVal, setDateRangeVal] = useState([
     {
@@ -170,10 +181,11 @@ const TaskDrwayer = ({ taskListId }) => {
   const { taskState: isOpen } = useSelector((state) => state?.projectTaskSlice);
   const isSubTaskShow = useSelector((state) => state.projectTaskSlice.subTask);
   const taskId = useSelector((state) => state?.projectTaskSlice?.taskId);
+  const { ref, inView } = useInView();
+
   const subtaskSide = useSelector(
     (state) => state.projectTaskSlice.subtaskDetailShow
   );
-  console.log("taskId", taskId);
   const subtaskChild = useSelector(
     (state) => state.projectTaskSlice.childSubTask
   );
@@ -263,10 +275,8 @@ const TaskDrwayer = ({ taskListId }) => {
 
   const { mutate: updateMileStoneList } = useMutation({
     mutationKey: ["update_mile_stonelist"],
-    mutationFn: () =>
-      axios.put(
-        `/task/update_milestone/${taskId}?milestone=${watchMilestone.value}`
-      ),
+    mutationFn: (data) =>
+      axios.put(`/task/update_milestone/${taskId}?milestone=${data?.assignee}`),
     onSuccess: (data) => {
       if (data.data.success) {
         enqueueSnackbar(data.data.message, { variant: "success" });
@@ -385,6 +395,21 @@ const TaskDrwayer = ({ taskListId }) => {
       },
     }
   );
+  const { mutate: deleteUser } = useMutation({
+    mutationKey: ["delete_user_assignee"],
+    mutationFn: (id) =>
+      axios.delete(`/task/delete_user/${taskId}?user_id=${id}`),
+    onSuccess: (data) => {
+      if (data.data.success) {
+        enqueueSnackbar(data.data.message, { variant: "success" });
+        queryClient.invalidateQueries(["task_details_subtask"]);
+        setIsOpendateChange(false);
+      }
+    },
+    onError: (data) => {
+      enqueueSnackbar(data.response.data.message, { variant: "error" });
+    },
+  });
 
   const checkKeyDown = (e) => {
     if (e.key === "Enter") {
@@ -394,14 +419,6 @@ const TaskDrwayer = ({ taskListId }) => {
         : updatePointList();
     }
   };
-
-  useEffect(() => {
-    if (!isEmpty(watchMilestone)) {
-      setTimeout(() => {
-        updateMileStoneList();
-      }, 500);
-    }
-  }, [watchMilestone?.value]);
 
   const { data: taskDetails } = useQuery(
     ["task_details_subtask", taskId],
@@ -427,8 +444,6 @@ const TaskDrwayer = ({ taskListId }) => {
     }
   );
 
-  console.log(taskDetails, "taskDetails");
-
   const { data: mileStoneCardList } = useQuery(
     ["milestone_list", projectId],
     () => {
@@ -446,10 +461,41 @@ const TaskDrwayer = ({ taskListId }) => {
     }
   );
 
+  const { mutate: updatePriority } = useMutation({
+    mutationKey: ["priority_update_list"],
+    mutationFn: (value) =>
+      axios.put(`/task/update_priority/${taskId}?priority=${value}`),
+    onSuccess: (data) => {
+      if (data?.data?.success) {
+        queryClient.invalidateQueries(["task_list_all"]);
+        queryClient.invalidateQueries(["task_details_subtask"]);
+        enqueueSnackbar(data.data.message, { variant: "success" });
+      }
+    },
+    onError: (data) => {
+      enqueueSnackbar(data.response.data.message, { variant: "error" });
+    },
+  });
+  const { mutate: updateRiskStatus } = useMutation({
+    mutationKey: ["update_risk_status"],
+    mutationFn: (value) =>
+      axios.put(`/task/update_risk_status/${taskId}?status=${value}`),
+    onSuccess: (data) => {
+      if (data?.data?.success) {
+        queryClient.invalidateQueries(["task_list_all"]);
+        queryClient.invalidateQueries(["task_details_subtask"]);
+        enqueueSnackbar(data.data.message, { variant: "success" });
+      }
+    },
+    onError: (data) => {
+      enqueueSnackbar(data.response.data.message, { variant: "error" });
+    },
+  });
+
   const milestoneName = mileStoneCardList?.find((val) => {
     return val?.value === taskDetails?.milestoneId;
   });
-  const sliceDetailTags = taskDetails?.tags?.slice(0, 3);
+  const sliceDetailTags = taskDetails?.tags?.slice(0, 9);
 
   const onSubmit = (data) => {
     const tagPayload = {
@@ -557,7 +603,7 @@ const TaskDrwayer = ({ taskListId }) => {
   };
 
   const { data: usersList } = useQuery({
-    queryKey: "workspace/workspace_members",
+    queryKey: ["workspace/workspace_members"],
     queryFn: () => axios.get(`workspace/workspace_members/${workspaceId}`),
     select: (res) => {
       return res?.data?.data.map((val) => {
@@ -592,8 +638,6 @@ const TaskDrwayer = ({ taskListId }) => {
     }
   );
 
-  console.log(dependenciesList, "dependenciesList");
-
   const handleTaskAssigneeChange = (assignee) => {
     setSelectedTaskAssigneeID(assignee);
     const obj = {
@@ -614,6 +658,11 @@ const TaskDrwayer = ({ taskListId }) => {
     user?.label?.toLowerCase()?.includes(filterDependencyValue.toLowerCase())
   );
 
+  const filterMilestoneList = mileStoneCardList?.filter((user) =>
+    user?.label?.toLowerCase()?.includes(filterMilstoneValue.toLowerCase())
+  );
+
+
   const handleChangeDependency = (event) => {
     setFilterDependencyValue(event.target.value);
   };
@@ -625,6 +674,116 @@ const TaskDrwayer = ({ taskListId }) => {
     };
     updateDependency(obj);
   };
+
+  const handleMilstoneChnage = (event) => {
+    setFilterMilesoneValue(event.target.value);
+  };
+
+  const handleMilstoneValuesChnage = (assignee) => {
+    setSelectedMilstoneId(assignee);
+    const obj = {
+      assignee: assignee,
+    };
+    updateMileStoneList(obj);
+  };
+
+  const { hasNextPage, isFetchingNextPage, fetchNextPage, data, isLoading } =
+    useInfiniteQuery(
+      ["get_task_logs", taskId],
+      ({ pageParam = 0 }) =>
+        axios.get(`/task/get_task_logs/${taskId}`, {
+          params: {
+            page_size: 10,
+            page_index: pageParam,
+          },
+        }),
+
+      {
+        getNextPageParam: (lastPage) => {
+          return lastPage?.data.page_number + 1 < lastPage.data.total_pages
+            ? lastPage.data.page_number + 1
+            : undefined;
+        },
+        // refetchOnWindowFocus:true
+      }
+    );
+
+ 
+
+  useEffect(() => {
+    if (inView) {
+      fetchNextPage();
+    }
+  }, [inView]);
+
+  const priorityList = [
+    {
+      name: "Low",
+      color: "#F5BE6A",
+      value: 4,
+    },
+    {
+      name: "Normal",
+      color: "#A1ECE8",
+      value: 3,
+    },
+    {
+      name: "High",
+      color: "#B76CD9",
+      value: 2,
+    },
+    {
+      name: "Critical",
+      color: "#FF614B",
+      value: 1,
+    },
+  ];
+
+  const riskList = [
+    {
+      name: "To Do ",
+      value: 1,
+      color: "#51CCC5",
+    },
+    {
+      name: "Completed",
+      value: 2,
+      color: "#F9DF71",
+    },
+    {
+      name: "Archived",
+      value: 3,
+      color: "#F06A6A",
+    },
+  ];
+
+  function PriorityShow(val) {
+    return val == 1
+      ? "Critical"
+      : val == 2
+      ? "High"
+      : val == 3
+      ? "Normal"
+      : "Low";
+  }
+
+  const ColorShow = (val) => {
+    return val == 1
+      ? "#FF614B"
+      : val == 2
+      ? "#B76CD9"
+      : val == 3
+      ? "#A1ECE8"
+      : "#F5BE6A";
+  };
+
+  const riskColorShow = (val) => {
+    return val == 1 ? "#51CCC5" : val == 2 ? "#F9DF71" : "#F06A6A";
+  };
+  const riskStatus = (val) => {
+    return val == 1 ? "To Do" : val == 2 ? "Completed" : "Archived";
+  };
+
   return (
     <div>
       <Drawer
@@ -688,23 +847,49 @@ const TaskDrwayer = ({ taskListId }) => {
                   <span className="text-[13px]">Assignee</span>
                 </Tooltip>
               </div>
-              <div
-                onClick={(e) => setIsTaskAssigneeDropdown(e.currentTarget)}
-                className="flex space-x-3 items-center"
-              >
-                <h1 className="text-[15px] cursor-pointer">Select Assignee</h1>
-                {taskDetails?.assigneeName?.length
-                  ? taskDetails?.assigneeName?.map((assignee) => (
-                      <div className="dropdown inline-block relative mr-2 ">
-                        <button className="py-[3px] px-[5px] border-0 inline-flex items-center bg-[#ff735f] text-[12px] font-medium rounded-[4px]">
-                          <span className="items-center inline-flex text-white align-middle">
-                            {assignee.name?.substr(0, 2)?.toUpperCase()}
-                          </span>
-                        </button>
-                      </div>
-                    ))
-                  : ""}
+              <div className="flex space-x-3 items-center">
+                <h1
+                  className="text-[15px] cursor-pointer"
+                  onClick={(e) => setIsTaskAssigneeDropdown(e.currentTarget)}
+                >
+                  Select Assignee
+                </h1>
+                <div className="flex space-x-2">
+                  {taskDetails?.assigneeName?.length ? (
+                    <div className="flex space-x-2 items-center">
+                      {taskDetails?.assigneeName?.map((assignee, index) => {
+                        return (
+                          <div
+                            key={index}
+                            className="dropdown flex space-x-2 relative items-center "
+                            onMouseEnter={() => setIsShown(assignee?.id)}
+                            onMouseLeave={() => setIsShown(false)}
+                          >
+                            <button className="py-[3px] px-[5px] border-0 inline-flex items-center bg-[#ff735f] text-[12px] font-medium rounded-[4px]">
+                              <span className="items-center inline-flex text-white align-middle">
+                                {assignee.name?.substr(0, 2)?.toUpperCase()}
+                              </span>
+                            </button>
+                            {isShown === assignee?.id && (
+                              <div
+                                className="absolute top-[-11px] cursor-pointer left-2"
+                                onClick={() => deleteUser(assignee?.user_Id)}
+                              >
+                                <CancelIcon
+                                  sx={{ fontSize: "17px", color: "#333346" }}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    ""
+                  )}
+                </div>
               </div>
+
               {Boolean(isTaskAssigneeDropdown) && (
                 <Popover
                   onClose={() => {
@@ -744,7 +929,7 @@ const TaskDrwayer = ({ taskListId }) => {
                         <li key={el.value} className="mb-3">
                           <div
                             onClick={() => handleTaskAssigneeChange(el.value)}
-                            className="flex items-center px-4 py-2 font-Manrope text-[12px]  hover:bg-[#F2FFFE] hover:text-[#00B8A9] "
+                            className="flex cursor-pointer items-center px-4 py-2 font-Manrope text-[12px]  hover:bg-[#F2FFFE] hover:text-[#00B8A9] "
                           >
                             <span className="w-[24px] h-[24px] mr-[5px] rounded-full bg-[#4775d5] flex justify-center items-center text-white text-[11px] font-Manrope font-medium">
                               {el.label.substr(0, 2)?.toUpperCase()}
@@ -769,15 +954,6 @@ const TaskDrwayer = ({ taskListId }) => {
                 </Tooltip>
               </div>
               <div className="flex items-center">
-                <div className="flex items-center cursor-pointer hover:bg-[#eee] rounded-sm px-2 py-1">
-                  <span className="text-[#ca2b51] mr-2 text-[14px]">
-                    Due Date
-                  </span>
-                  <p className="text-[14px] text-[#ca2b51]">
-                    {moment(taskDetails?.dueDate).format("MMM D, YYYY")}
-                  </p>
-                </div>
-
                 <PopupState variant="popover" popupId="date-popover">
                   {(popupState) => (
                     <div>
@@ -787,11 +963,20 @@ const TaskDrwayer = ({ taskListId }) => {
                       >
                         <div
                           onClick={() => setIsOpenDueDate(true)}
-                          className="flex space-x-2 items-center"
+                          className="flex space-x-1 items-center"
                         >
-                          <CalendarMonthIcon
-                            sx={{ fontSize: "16px", color: "#ca2b51" }}
-                          />
+                          <div className="flex space-x-2 items-center">
+                            <CalendarMonthIcon
+                              sx={{ fontSize: "16px", color: "#ca2b51" }}
+                            />
+                          </div>
+                          <div className="flex items-center cursor-pointer hover:bg-[#eee] rounded-sm px-2 py-1">
+                            <p className="text-[14px] text-[#ca2b51]">
+                              {moment(taskDetails?.dueDate).format(
+                                "MMM D, YYYY"
+                              )}
+                            </p>
+                          </div>
                         </div>
                       </div>
                       {isOpenDueDate && (
@@ -837,10 +1022,6 @@ const TaskDrwayer = ({ taskListId }) => {
               </div>
               <div className="flex flex-col">
                 <div className="flex items-center mb-1">
-                  {/* <div className="flex items-center cursor-pointer hover:bg-[#eee] rounded-[20px] px-3 py-1">
-                    <p className="text-[13px]">UI project</p>
-                  </div> */}
-
                   <p className="text-[13px] ml-3">{taskDetails?.projectName}</p>
                 </div>
               </div>
@@ -906,7 +1087,7 @@ const TaskDrwayer = ({ taskListId }) => {
                                     onClick={() =>
                                       handleDependencyChange(el.value)
                                     }
-                                    className="flex items-center px-4 py-2 font-Manrope text-[12px]  hover:bg-[#F2FFFE] hover:text-[#00B8A9] "
+                                    className="flex cursor-pointer items-center px-4 py-2 font-Manrope text-[12px]  hover:bg-[#F2FFFE] hover:text-[#00B8A9] "
                                   >
                                     <span className="w-[24px] h-[24px] mr-[5px] rounded-full bg-[#4775d5] flex justify-center items-center text-white text-[11px] font-Manrope font-medium">
                                       {el.label.substr(0, 2)?.toUpperCase()}
@@ -928,7 +1109,7 @@ const TaskDrwayer = ({ taskListId }) => {
               </div>
             </div>
             {/* Priority  */}
-            <div className="px-[1rem] flex mb-3">
+            <div className="px-[1rem] flex mb-4">
               <div className="relative w-[20%]">
                 <span className="text-[13px]">
                   <ExpandCircleDownOutlinedIcon
@@ -947,49 +1128,54 @@ const TaskDrwayer = ({ taskListId }) => {
                 <div className="flex items-center mb-1">
                   <div className="incompleteBtn">
                     <div className="group relative">
-                      <button className="px-3 py-[1px] rounded-[16px] bg-[#a1ece8] text-[#2F2F2F] hover:bg-[#eee] flex items-center font-Manrope text-[14px]">
-                        Low
+                      <button
+                        style={{
+                          background: ColorShow(taskDetails?.priority),
+                        }}
+                        className="px-3 py-[2px] rounded-[16px] bg-[#a1ece8] text-[#fff] hover:bg-[#eee] flex items-center justify-center text-center font-Manrope text-[14px] w-[100px]"
+                      >
+                        {PriorityShow(taskDetails?.priority)}
                       </button>
                       <div
                         tabIndex={0}
                         className=" bg-white invisible border border-[#E8E8E9] rounded w-[150px] right-1 absolute  top-full transition-all opacity-0 group-focus-within:visible group-focus-within:opacity-100 group-focus-within:translate-y-1 z-10"
                       >
-                        <ul className="py-3 commonDropDown">
-                          <li className="px-3 mb-3 selected">
-                            <span className="selected-icon text-sm relative -left-1">
-                              <DoneOutlinedIcon sx={{ fontSize: "16px" }} />
-                            </span>
-                            <a
-                              href="#"
-                              className="d-flex px-3 py-[3px] font-Manrope text-[12px] rounded-[16px] bg-[#a1ece8] "
-                            >
-                              Low
-                            </a>
-                          </li>
+                        <div>
+                          <ul className="py-3 commonDropDown">
+                            {priorityList?.map((val, index) => {
+                              return (
+                                <li
+                                  className={` ${
+                                    priorityIconShow == val?.name
+                                      ? "selected"
+                                      : ""
+                                  } px-3 mb-3 `}
+                                  key={index}
+                                >
+                                  <span className=" text-sm relative selected-icon -left-1 pr-2">
+                                    <DoneOutlinedIcon
+                                      sx={{
+                                        fontSize: "16px",
+                                        color: "black",
+                                      }}
+                                    />
+                                  </span>
 
-                          <li className="px-3 mb-3">
-                            <span className="selected-icon text-sm relative -left-1">
-                              <DoneOutlinedIcon sx={{ fontSize: "16px" }} />
-                            </span>
-                            <a
-                              href="#"
-                              className="d-flex px-3 py-[3px] font-Manrope text-[12px] rounded-[16px] bg-[#f5be6a] "
-                            >
-                              Medium
-                            </a>
-                          </li>
-                          <li className="px-3 mb-3">
-                            <span className="selected-icon text-sm relative -left-1">
-                              <DoneOutlinedIcon sx={{ fontSize: "16px" }} />
-                            </span>
-                            <a
-                              href="#"
-                              className="d-flex px-3 py-[3px] font-Manrope text-[12px] rounded-[16px] bg-[#b76cd9] "
-                            >
-                              High
-                            </a>
-                          </li>
-                        </ul>
+                                  <a
+                                    onClick={() => {
+                                      setPriorityIconShow(val?.name);
+                                      updatePriority(val?.value);
+                                    }}
+                                    style={{ background: val?.color }}
+                                    className="d-flex cursor-pointer px-3 py-1 font-Manrope text-[12px] w-[80px] inline-block text-center rounded-[16px] "
+                                  >
+                                    {val.name}
+                                  </a>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1016,48 +1202,42 @@ const TaskDrwayer = ({ taskListId }) => {
                 <div className="flex items-center mb-1">
                   <div className="incompleteBtn">
                     <div className="group relative">
-                      <button className="px-3 py-[1px] rounded-[16px] bg-[#f9df71] text-[#2F2F2F] hover:bg-[#eee] flex items-center font-Manrope text-[14px]">
-                        At risk
+                      <button
+                        style={{
+                          background: riskColorShow(taskDetails?.taskRisk),
+                        }}
+                        className="px-3 py-[2px] w-[100px] justify-center rounded-[16px] text-[#fff] hover:bg-[#eee] flex items-center font-Manrope text-[14px]"
+                      >
+                        {riskStatus(taskDetails?.taskRisk)}
                       </button>
                       <div
                         tabIndex={0}
                         className=" bg-white invisible border border-[#E8E8E9] rounded w-[150px] right-1 absolute  top-full transition-all opacity-0 group-focus-within:visible group-focus-within:opacity-100 group-focus-within:translate-y-1 z-10"
                       >
                         <ul className="py-3 commonDropDown">
-                          <li className="px-3 mb-3">
-                            <span className="selected-icon text-sm relative -left-1">
-                              <DoneOutlinedIcon sx={{ fontSize: "16px" }} />
-                            </span>
-                            <a
-                              href="#"
-                              className="d-flex px-3 py-[3px] font-Manrope text-[12px] rounded-[16px] bg-[#51ccc5] "
-                            >
-                              On track
-                            </a>
-                          </li>
-                          <li className="px-3 mb-3 selected">
-                            <span className="selected-icon text-sm relative -left-1">
-                              <DoneOutlinedIcon sx={{ fontSize: "16px" }} />
-                            </span>
-                            <a
-                              href="#"
-                              className="d-flex px-3 py-[3px] font-Manrope text-[12px] rounded-[16px] bg-[#f9df71] "
-                            >
-                              At risk
-                            </a>
-                          </li>
-
-                          <li className="px-3 mb-3">
-                            <span className="selected-icon text-sm relative -left-1">
-                              <DoneOutlinedIcon sx={{ fontSize: "16px" }} />
-                            </span>
-                            <a
-                              href="#"
-                              className="d-flex px-3 py-[3px] font-Manrope text-[12px] rounded-[16px] bg-[#f06a6a] "
-                            >
-                              Off track
-                            </a>
-                          </li>
+                          {riskList.map((val) => {
+                            return (
+                              <li
+                                className={`${
+                                  riskStatusShow === val?.name ? "selected" : ""
+                                } px-3 mb-3`}
+                              >
+                                <span className="text-sm selected-icon relative -left-1">
+                                  <DoneOutlinedIcon sx={{ fontSize: "16px" }} />
+                                </span>
+                                <a
+                                  style={{ background: val?.color }}
+                                  onClick={() => {
+                                    setRiskStatusShow(val?.name);
+                                    updateRiskStatus(val.value);
+                                  }}
+                                  className="d-flex cursor-pointer px-3 py-1 font-Manrope text-[12px] w-[90px] inline-block text-center rounded-[16px] "
+                                >
+                                  {val.name}
+                                </a>
+                              </li>
+                            );
+                          })}
                         </ul>
                       </div>
                     </div>
@@ -1066,258 +1246,265 @@ const TaskDrwayer = ({ taskListId }) => {
               </div>
             </div>
 
-            {/* /////////////// end new design /////////////////////////// */}
+            <div className="px-[1rem] flex mb-3">
+              <div className="relative w-[20%]">
+                <div
+                  className="flex space-x-2 items-center cursor-pointer"
+                  onClick={handleClick}
+                >
+                  <LocalOfferIcon sx={{ fontSize: "15px", color: "#B1B5D0" }} />
+                  <h3 className="text-[13px]">Tags</h3>
+                </div>
+              </div>
+              <div className="flex flex-col">
+                <div className="flex items-center mb-1">
+                  <div className="incompleteBtn">
+                    <div className="cursor-pointer mt-4 pl-2">
+                      <Grid container spacing={2}>
+                        <div className="flex items-center">
+                          <div>
+                            <p
+                              className="text-[13px] pr-1"
+                              onClick={handleClick}
+                            >
+                              Select Tags
+                            </p>
+                          </div>
+                          {sliceDetailTags?.map((val) => {
+                            return (
+                              <>
+                                <div
+                                  item
+                                  className="px-1 relative"
+                                  onMouseEnter={() =>
+                                    setIsTagDeleteShow(val?.id)
+                                  }
+                                  onMouseLeave={() => setIsTagDeleteShow(false)}
+                                >
+                                  <div
+                                    onClick={handleClick}
+                                    className="rounded-md h-auto flex items-center justify-center text-[12px] py-[2px] px-[12px] text-[#fff]"
+                                    style={{ background: val?.color }}
+                                  >
+                                    {val.name}
+                                  </div>
+                                  {isTagDeleteShow == val?.id && (
+                                    <span
+                                      className=" "
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        tagDelete(val?.id);
+                                      }}
+                                    >
+                                      <CancelIcon
+                                        sx={{
+                                          position: "absolute",
+                                          fontSize: "17px",
+                                          bottom: "19px",
+                                          right: "0px",
+                                          color: "#333346",
+                                        }}
+                                      />
+                                    </span>
+                                  )}
+                                </div>
+                              </>
+                            );
+                          })}
+                          {taskDetails?.tags?.length > 8 && (
+                            <span className="">
+                              {" "}
+                              <div
+                                className="cursor-pointer"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  dispatch(tagsOpen());
+                                }}
+                              >
+                                <MoreHorizIcon sx={{ color: "#02BBAB" }} />
+                              </div>
+                            </span>
+                          )}
+                        </div>
+                      </Grid>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="px-[1rem] flex mb-3">
+              <div className="relative w-[20%]">
+                <div
+                  className="flex flex-col cursor-pointer"
+                  onClick={handleClick2}
+                >
+                  <div
+                    className="flex space-x-2 items-center"
+                    onClick={(e) => setIsMilestoneDropdown(e.currentTarget)}
+                  >
+                    <FormatListBulletedIcon
+                      sx={{ fontSize: "15px", color: "#B1B5D0" }}
+                    />
+                    <h3 className="text-[13px]">Milestone </h3>
+                  </div>
+
+                  {Boolean(isMilestoneDropdown) && (
+                    <Popover
+                      onClose={() => {
+                        setIsMilestoneDropdown(null);
+                      }}
+                      sx={{
+                        height: "200px",
+                        "& .MuiPaper-root": {
+                          boxShadow: "none", // Remove the box shadow
+                        },
+                      }}
+                      open={Boolean(isMilestoneDropdown)}
+                      anchorEl={isMilestoneDropdown}
+                      anchorOrigin={{
+                        vertical: "bottom",
+                        horizontal: "center",
+                      }}
+                      transformOrigin={{
+                        vertical: "top",
+                        horizontal: "center",
+                      }}
+                    >
+                      <div
+                        tabIndex={0}
+                        className=" bg-white  border border-[#E8E8E9] rounded w-[300px]  "
+                      >
+                        <ul className="py-1">
+                          <li>
+                            <input
+                              type="text"
+                              className=" text-[13px] border-0 border-b-slate-50"
+                              placeholder="Search Milestones"
+                              onChange={handleMilstoneChnage}
+                            />
+                          </li>
+                          {filterMilestoneList?.map((el) => (
+                            <li key={el.value} className="mb-3">
+                              <div
+                                onClick={() =>
+                                  handleMilstoneValuesChnage(el.value)
+                                }
+                                className="flex cursor-pointer items-center px-4 py-2 font-Manrope text-[12px]  hover:bg-[#F2FFFE] hover:text-[#00B8A9] "
+                              >
+                                <span className="w-[24px] h-[24px] mr-[5px] rounded-full bg-[#4775d5] flex justify-center items-center text-white text-[11px] font-Manrope font-medium">
+                                  {el.label.substr(0, 2)?.toUpperCase()}
+                                </span>
+                                {el.label}{" "}
+                                <em className="text-[#666] ml-2 not-italic">
+                                  {el.email}
+                                </em>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </Popover>
+                  )}
+                </div>
+              </div>
+
+              {/* value milestone  */}
+              <div className="flex flex-col">
+                <div className="flex items-center mb-1">
+                  <div className="incompleteBtn">
+                    <div>
+                      <h3 className="text-[13px] text-[#B1B5D0] font-[500]">
+                        {milestoneName?.label}
+                      </h3>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="px-[1rem] flex mb-0">
+              <div className="relative w-[20%]">
+                <div className=" flex space-x-2 relative items-center cursor-pointer">
+                  <DateRangeIcon
+                    sx={{
+                      fontSize: "13px",
+                      color: "#B1B5D0",
+                    }}
+                  />
+                  <h3 className="text-[13px] ">Start & End Date </h3>
+                </div>
+              </div>
+              <div className="flex flex-col">
+                <div className="flex items-center mb-1">
+                  <PopupState variant="popover" popupId="demo-popup-popover">
+                    {(popupState) => (
+                      <div>
+                        <div
+                          {...bindTrigger(popupState)}
+                          className="w-max cursor-pointer rounded-md bg-white flex items-center justify-center"
+                        >
+                          <div
+                            className="cursor-pointer"
+                            onClick={() => setIsOpendateChange(true)}
+                          >
+                            <h3 className="text-[13px] text-[#B1B5D0] font-[500] h-[20px] hover:border-b-2 border-dashed ">
+                              {moment(taskDetails?.startDate).format("ll")}-{" "}
+                              {moment(taskDetails?.dueDate).format("ll")}
+                            </h3>
+                          </div>
+                        </div>
+                        {isOpendateChange && (
+                          <Popover
+                            onClose={() => setIsOpendateChange(false)}
+                            {...bindPopover(popupState)}
+                            anchorOrigin={{
+                              vertical: "bottom",
+                              horizontal: "center",
+                            }}
+                            transformOrigin={{
+                              vertical: "top",
+                              horizontal: "center",
+                            }}
+                          >
+                            <div>
+                              <DateRangePicker
+                                onChange={handleOnChange}
+                                showSelectionPreview={true}
+                                moveRangeOnFirstSelection={false}
+                                months={2}
+                                ranges={DateRangeVal}
+                                direction="horizontal"
+                              />
+                              <div className="flex space-x-2 justify-end p-4 cursor-pointer">
+                                <WhiteButton
+                                  onClick={() => setIsOpendateChange(false)}
+                                  buttonText="Cancel"
+                                />
+                                <GreenButton
+                                  loading={updatingDateRange}
+                                  onClick={handleSubmitDateChange}
+                                  buttonText="Save"
+                                />
+                              </div>
+                            </div>
+                          </Popover>
+                        )}
+                      </div>
+                    )}
+                  </PopupState>
+                </div>
+              </div>
+            </div>
 
             <Box>
-              <Grid container sx={{ marginTop: "6px", paddingBottom: "20px" }}>
+              <Grid container sx={{ paddingBottom: "20px" }}>
                 <Grid item xs={12} sx={{ borderRight: "1px solid #E5E7EB" }}>
-                  <div
-                    className=""
-                    style={{ height: "90vh", overflow: "auto" }}
-                  >
+                  <div className="">
                     <Box
                       sx={{ flexGrow: 1, marginTop: "20px", padding: "0 24px" }}
                     >
                       <Grid container spacing={2}>
-                        {/* <Grid item xs={12}>
-                          <div className="flex flex-col">
-                            <div className="flex space-x-2 items-center">
-                              <PersonIcon
-                                sx={{ fontSize: "15px", color: "#B1B5D0" }}
-                              />
-                              <h3 className="text-[14px]">Assignee </h3>
-                            </div>
-                            <div className="flex space-x-2 items-center">
-                              <div>
-                                <AvatarGroup
-                                  sx={{
-                                    "& .MuiAvatar-root": {
-                                      width: 24,
-                                      height: 24,
-                                      fontSize: 15,
-                                    },
-                                  }}
-                                  variant="rounded"
-                                  spacing="medium"
-                                  max={3}
-                                >
-                                  {taskDetails?.assigneeName?.map(
-                                    (obj, index) => {
-                                      const sliceName = obj?.name?.slice(0, 1);
-                                      return (
-                                        <Avatar
-                                          key={index}
-                                          alt={sliceName}
-                                          src={obj?.photo?.file_path}
-                                        />
-                                      );
-                                    }
-                                  )}
-                                </AvatarGroup>
-                              </div>
-                              <div>
-                                <PopupState
-                                  variant="popover"
-                                  popupId="demo-popup-popover"
-                                >
-                                  {(popupState) => (
-                                    <div>
-                                      <div
-                                        {...bindTrigger(popupState)}
-                                        className="w-max cursor-pointer border border-gray-300 rounded-md bg-white flex items-center text-[14px] justify-center"
-                                      >
-                                        <PersonAddIcon
-                                          sx={{
-                                            color: "#00A99B",
-                                            fontSize: "14px",
-                                          }}
-                                        />
-                                      </div>
-
-                                      <Popover
-                                        {...bindPopover(popupState)}
-                                        anchorOrigin={{
-                                          vertical: "bottom",
-                                          horizontal: "center",
-                                        }}
-                                        transformOrigin={{
-                                          vertical: "top",
-                                          horizontal: "center",
-                                        }}
-                                      >
-                                        <Box
-                                          sx={{
-                                            width: "200px",
-                                            height: "200px",
-                                            fontSize: "14px",
-                                            position: "relative",
-                                          }}
-                                        >
-                                          <div className="mt-1 px-1 w-full top-0 left-0 pb-[40px]">
-                                            <Select
-                                              options={usersList}
-                                              placeholder="Search..."
-                                              onChange={(e) =>
-                                                handleAssigntoChange(e)
-                                              }
-                                            />
-                                          </div>
-                                        </Box>
-                                      </Popover>
-                                    </div>
-                                  )}
-                                </PopupState>
-                              </div>
-                            </div>
-                          </div>
-                        </Grid> */}
-                        <Grid item xs={12}>
-                          <div className="flex flex-col">
-                            <div
-                              className="flex space-x-2 items-center cursor-pointer"
-                              onClick={handleClick}
-                            >
-                              <LocalOfferIcon
-                                sx={{ fontSize: "15px", color: "#B1B5D0" }}
-                              />
-                              <h3 className="text-[14px]">Tags</h3>
-                              <span className="">
-                                {" "}
-                                <div
-                                  className="cursor-pointer"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    dispatch(tagsOpen());
-                                  }}
-                                >
-                                  <MoreHorizIcon sx={{ color: "#02BBAB" }} />
-                                </div>
-                              </span>
-                            </div>
-                            <div
-                              onClick={handleClick}
-                              className="cursor-pointer mt-4"
-                            >
-                              <Grid container spacing={2}>
-                                {sliceDetailTags?.map((val) => {
-                                  return (
-                                    <>
-                                      <Grid item xs={3}>
-                                        <div
-                                          className="rounded-[24px] h-auto flex items-center justify-center text-[13px] py-[2px] text-[#111]"
-                                          style={{ background: val?.color }}
-                                        >
-                                          {val.name}
-                                        </div>
-                                      </Grid>
-                                    </>
-                                  );
-                                })}
-                              </Grid>
-                            </div>
-                          </div>
-                        </Grid>
-                        <Grid item xs={12}>
-                          <div
-                            className="flex flex-col cursor-pointer"
-                            onClick={handleClick2}
-                          >
-                            <div className="flex space-x-2 items-center">
-                              <FormatListBulletedIcon
-                                sx={{ fontSize: "15px", color: "#B1B5D0" }}
-                              />
-                              <h3 className="text-[14px]">List </h3>
-                            </div>
-                            <div>
-                              <h3 className="text-[14px] text-[#B1B5D0] font-[500]">
-                                {milestoneName?.label}
-                              </h3>
-                            </div>
-                          </div>
-                        </Grid>
-                        <Grid item xs={12}>
-                          <div className="flex flex-col">
-                            <div className=" flex space-x-2 relative items-center cursor-pointer">
-                              <DateRangeIcon
-                                sx={{
-                                  fontSize: "15px",
-                                  color: "#B1B5D0",
-                                }}
-                              />
-                              <h3 className="text-[14px] ">
-                                Start and End Date{" "}
-                              </h3>
-                            </div>
-                            <PopupState
-                              variant="popover"
-                              popupId="demo-popup-popover"
-                            >
-                              {(popupState) => (
-                                <div>
-                                  <div
-                                    {...bindTrigger(popupState)}
-                                    className="w-max cursor-pointer rounded-md bg-white flex items-center justify-center"
-                                  >
-                                    <div
-                                      className="cursor-pointer"
-                                      onClick={() => setIsOpendateChange(true)}
-                                    >
-                                      <h3 className="text-[14px] text-[#B1B5D0] font-[500] h-[20px] hover:border-b-2 border-dashed ">
-                                        {moment(taskDetails?.startDate).format(
-                                          "ll"
-                                        )}
-                                        -{" "}
-                                        {moment(taskDetails?.dueDate).format(
-                                          "ll"
-                                        )}
-                                      </h3>
-                                    </div>
-                                  </div>
-                                  {isOpendateChange && (
-                                    <Popover
-                                      onClose={() => setIsOpendateChange(false)}
-                                      {...bindPopover(popupState)}
-                                      anchorOrigin={{
-                                        vertical: "bottom",
-                                        horizontal: "center",
-                                      }}
-                                      transformOrigin={{
-                                        vertical: "top",
-                                        horizontal: "center",
-                                      }}
-                                    >
-                                      <div>
-                                        <DateRangePicker
-                                          onChange={handleOnChange}
-                                          showSelectionPreview={true}
-                                          moveRangeOnFirstSelection={false}
-                                          months={2}
-                                          ranges={DateRangeVal}
-                                          direction="horizontal"
-                                        />
-                                        <div className="flex space-x-2 justify-end p-4 cursor-pointer">
-                                          <WhiteButton
-                                            onClick={() =>
-                                              setIsOpendateChange(false)
-                                            }
-                                            buttonText="Cancel"
-                                          />
-                                          <GreenButton
-                                            loading={updatingDateRange}
-                                            onClick={handleSubmitDateChange}
-                                            buttonText="Save"
-                                          />
-                                        </div>
-                                      </div>
-                                    </Popover>
-                                  )}
-                                </div>
-                              )}
-                            </PopupState>
-                          </div>
-                        </Grid>
-
-                        {/* tags rendering  */}
                         <div className="w-full">
                           {name === "Subtasks" ? (
                             <div className="w-full">
@@ -1500,15 +1687,20 @@ const TaskDrwayer = ({ taskListId }) => {
                                   className="cursor-pointer mt-4"
                                 >
                                   <Grid container spacing={2}>
-                                    {sliceDetailTags?.map((val) => {
+                                    {sliceDetailTags?.map((val, index) => {
                                       return (
                                         <>
                                           <Grid item xs={6}>
-                                            <div
-                                              className="rounded-md h-auto flex items-center justify-center"
-                                              style={{ background: val?.color }}
-                                            >
-                                              {val?.name}
+                                            <div className="relative">
+                                              <div
+                                                key={index}
+                                                className="rounded-md h-auto flex items-center justify-center"
+                                                style={{
+                                                  background: val?.color,
+                                                }}
+                                              >
+                                                {val?.name}
+                                              </div>
                                             </div>
                                           </Grid>
                                         </>
@@ -1541,61 +1733,95 @@ const TaskDrwayer = ({ taskListId }) => {
                       </div>
                     </div>
                   ) : (
-                    <div className="relative mt-10">
+                    <div className="relative mt-10 ">
+                      {/* logggsss */}
+                      {/* <div className="max-h-[100px] overflow-auto">
+                        {data?.pages?.map((page, pageIndex) =>
+                          page.data?.data?.map((card, innerIndex) => (
+                            <div key={card.id} item md={6} lg={6} sx={12}>
+                              <div>
+                                <h1>helloooo</h1>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div> */}
+
+                      {/* <Box className="flex justify-center items-center">
+                        <h4 ref={ref} className="text-[15px]  font-600">
+                          {isFetchingNextPage
+                            ? "Loading More"
+                            : hasNextPage
+                            ? "Load More"
+                            : "Nothing More to Load"}
+                        </h4>
+                      </Box> */}
+
                       <div className="flex justify-between items-center px-5">
                         <div className="flex space-x-2 items-center">
                           <TextsmsIcon
                             sx={{ fontSize: "15px", color: "#B1B5D0" }}
                           />
-                          <h1>
+                          <h1 className="text-[13px]">
                             {" "}
                             {`${taskDetails?.comments?.length}  Comments `}{" "}
                           </h1>
                         </div>
-                        {/* <h1>icons </h1> */}
-                      </div>
-                      <div className="mt-1">
-                        <Divider sx={{ marginRight: "1rem" }}>
-                          <h3 className="text-[14px]">Today</h3>
-                        </Divider>
                       </div>
 
-                      {/* messages will start from here  */}
+                      <div className="mt-1">
+                        <Divider sx={{ marginRight: "1rem" }}>
+                          <h3 className="text-[13px]">Today</h3>
+                        </Divider>
+                      </div>
                       {taskDetails?.comments?.length > 0 && (
-                        <div className="pb-11 px-5 mt-5">
-                          <div className="flex space-x-3">
-                            <img
-                              src={auth?.user?.photo?.file_path}
-                              className="w-[30px] h-[30px] rounded-md"
-                            />
-                            <h3>{auth?.user?.name}</h3>
-                          </div>
+                        <div className="pb-11 px-5 mt-5 ">
                           <div className="mt-1">
-                            {taskDetails?.comments?.map((val) => {
+                            {taskDetails?.comments?.map((val, index) => {
                               return (
-                                <div key={val?.id} className="">
-                                  <h3 className="pt-[4px] pb-1 text-[15px]">
-                                    {val?.comment}
-                                  </h3>
-                                  <div className="">
-                                    {val?.attachments?.length > 0 && (
-                                      <div className="flex flex-wrap">
-                                        {val?.attachments?.map((elem) => {
-                                          return (
-                                            <div
-                                              key={elem?.id}
-                                              className="mb-5"
-                                            >
-                                              <img
-                                                className="w-[140px] pr-6 rounded-md h-[100px]"
-                                                src={elem?.file_path}
-                                                alt={elem?.file_name}
-                                              />
-                                            </div>
-                                          );
-                                        })}
-                                      </div>
-                                    )}
+                                <div
+                                  key={index}
+                                  className="flex space-x-5 pt-4"
+                                >
+                                  <div>
+                                    <img
+                                      src={auth?.user?.photo?.file_path}
+                                      className="w-[30px] h-[30px] rounded-full"
+                                    />
+                                  </div>
+
+                                  <div className="border border-gray-200 rounded-md px-2 shadow-sm w-full">
+                                    <div className="pt-1">
+                                      <h3 className="text-[15px] font-semibold">
+                                        {auth?.user?.name}
+                                      </h3>
+                                      <h3 className="pt-[4px] pb-1 text-[13px]">
+                                        {val?.comment}
+                                      </h3>
+                                    </div>
+
+                                    <div className="pt-1">
+                                      {val?.attachments?.length > 0 && (
+                                        <div className="flex flex-wrap">
+                                          {val?.attachments?.map(
+                                            (elem, index) => {
+                                              return (
+                                                <div
+                                                  key={index}
+                                                  className="mb-5 p-[2px]"
+                                                >
+                                                  <img
+                                                    className="w-[140px]  rounded-md h-[100px]"
+                                                    src={elem?.file_path}
+                                                    alt={elem?.file_name}
+                                                  />
+                                                </div>
+                                              );
+                                            }
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
                                   </div>
                                 </div>
                               );
@@ -1658,17 +1884,17 @@ const TaskDrwayer = ({ taskListId }) => {
                                   sx={{ fontSize: "18px", color: "#9198CD" }}
                                 />
                               </div>
-                              <div>
-                                <MicIcon
-                                  sx={{ fontSize: "18px", color: "#9198CD" }}
-                                />
-                              </div>
+
                               <div>
                                 <button
                                   type="submit"
-                                  className="inline-flex justify-center p-1 text-white bg-[#02bbab] rounded-md"
+                                  className="inline-flex w-[30px] mt-1 h-[30px] justify-center p-1 text-white bg-[#02bbab] rounded-md"
                                 >
-                                  <NearMeIcon />
+                                  {messageLoading ? (
+                                    <CircularProgress size={20} />
+                                  ) : (
+                                    <NearMeIcon />
+                                  )}
                                 </button>
                               </div>
                             </div>
@@ -1681,6 +1907,8 @@ const TaskDrwayer = ({ taskListId }) => {
               </Grid>
             </Box>
           </div>
+          {/*  */}
+
           <div>
             <Menu
               id="basic-menu"
@@ -1726,10 +1954,11 @@ const TaskDrwayer = ({ taskListId }) => {
 
                       <Box>
                         <Grid container spacing={1}>
-                          {tagsColors?.map((val) => {
+                          {tagsColors?.map((val, index) => {
                             return (
                               <Grid item xs={3}>
                                 <div
+                                  key={index}
                                   onClick={() => setColorState(val.color)}
                                   className="h-[30px] w-[47px] rounded flex items-center justify-center"
                                   style={{ background: val.color }}
@@ -1748,9 +1977,7 @@ const TaskDrwayer = ({ taskListId }) => {
                           })}
                         </Grid>
                       </Box>
-                      <div className="mt-2">
-                        <Divider />
-                      </div>
+                      <div className="mt-2 border-[#eee] border-b"></div>
 
                       <div className="flex space-x-1 mt-3">
                         <button
@@ -1799,9 +2026,10 @@ const TaskDrwayer = ({ taskListId }) => {
                         />
                       </div>
                       <div>
-                        {periorityTag?.map((val) => {
+                        {periorityTag?.map((val, index) => {
                           return (
                             <div
+                              key={index}
                               onClick={() => {
                                 setTagId(val?.id);
                                 updateTags(val?.id);
@@ -1827,11 +2055,11 @@ const TaskDrwayer = ({ taskListId }) => {
 
                       <h3 className="py-2">Custom Tags</h3>
                       <div>
-                        {customTags?.map((val) => {
+                        {customTags?.map((val, index) => {
                           return (
                             <div className="flex space-x-2 items-center">
                               <div
-                                key={val.id}
+                                key={index}
                                 onClick={() => {
                                   setTagId(val.id);
                                   updateTags(val?.id);
@@ -1887,38 +2115,6 @@ const TaskDrwayer = ({ taskListId }) => {
             </Menu>
           </div>
         </Box>
-
-        <Popover
-          id2={id2}
-          open={open2}
-          anchorEl={anchorEl2}
-          onClose={handleClose2}
-          anchorOrigin={{
-            vertical: "bottom",
-            horizontal: "left",
-          }}
-        >
-          <Box
-            sx={{
-              width: "180px",
-              height: "220px",
-              background: "white",
-              paddingLeft: "2px",
-              paddingRight: "2px",
-            }}
-          >
-            <div className="mt-2 px-4">
-              <HookSelectField
-                name="milestone"
-                errors={errors}
-                control={control}
-                loadOptions={mileStoneCardList}
-                placeholder="Search..."
-                // isMulti={true}
-              />
-            </div>
-          </Box>
-        </Popover>
       </Drawer>
       <TagsDialog tagsAssignList={taskDetails?.tags} />
     </div>
@@ -2179,11 +2375,11 @@ const SubTaskInnerList = ({ taskDetails }) => {
     <div className=" w-full">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-[14px] mt-2 px-3">Progress</h1>
+          <h1 className="text-[13px] px-3">Progress</h1>
         </div>
-        <div className="flex items-center mr-[8rem]">
-          <div className="flex items-center">
-            <h3 className="">
+        <div className="flex items-center">
+          <div className="flex items-center my-4">
+            <h3 className="mr-3 text-[13px]">
               {completeLengthCheck}/{incompleteTaskLength + completeLengthCheck}
             </h3>
             <div>
@@ -2195,18 +2391,18 @@ const SubTaskInnerList = ({ taskDetails }) => {
       {taskDetails?.incompleteSubTasks?.length > 0 && (
         <div>
           <div className="pl-[0.9rem]">
-            <h1 className="text-[14px]">Sub Task</h1>
+            <h1 className="text-[13px]">Sub Task</h1>
           </div>
-          {taskDetails?.incompleteSubTasks?.map((val) => {
+          {taskDetails?.incompleteSubTasks?.map((val, index) => {
             return (
               <>
                 <div
                   className="flex justify-between w-full px-[0.2rem] mt-2"
-                  key={val?.id}
+                  key={index}
                 >
                   <div className="flex space-x-1 items-center">
                     <Checkbox
-                      sx={{ fontSize: "6px" }}
+                      icon={<CircleOutlinedIcon sx={{ fontSize: "20px" }} />}
                       checked={false}
                       onChange={() => handleChange(val?.subTaskId)}
                     />
@@ -2217,23 +2413,16 @@ const SubTaskInnerList = ({ taskDetails }) => {
                         setSubtaskAssigneeId(val?.subTaskId);
                       }}
                     >
-                      <h3>{val?.subTaskName}</h3>
+                      <h3 className="text-[13px]">{val?.subTaskName}</h3>
                     </div>
                   </div>
                   <div className="flex space-x-2 items-center">
-                    {/* <div className="flex justify-center items-center h-[20px] rounded-md w-[20px] bg-white text-[#00A99B] border border-gray-200">
-                      <MapsUgcIcon sx={{ fontSize: "16px" }} />
-                    </div>
-                    <div className="flex justify-center items-center h-[20px] rounded-md w-[20px] bg-white text-[#00A99B] border border-gray-200">
-                      <PersonAddIcon sx={{ fontSize: "16px" }} />
-                    </div> */}
-
                     <PopupState variant="popover" popupId="demo-popup-popover">
                       {(popupState) => (
                         <div>
-                          <div className="cursor-pointer w-max  border border-gray-300 rounded-md bg-white flex items-center justify-center">
+                          <div className="cursor-pointer w-max px-1 py-[3px] border border-gray-300 rounded-md bg-white flex items-center justify-center">
                             <MoreHorizIcon
-                              sx={{ fontSize: "17px" }}
+                              sx={{ fontSize: "16px" }}
                               {...bindTrigger(popupState)}
                             />
                           </div>
@@ -2261,9 +2450,9 @@ const SubTaskInnerList = ({ taskDetails }) => {
                                 onClick={() => setDateShow(!dateShow)}
                               >
                                 <div>
-                                  <EditCalendarIcon sx={{ fontSize: "18px" }} />
+                                  <EditCalendarIcon sx={{ fontSize: "16px" }} />
                                 </div>
-                                <h3>Add a Due Date</h3>
+                                <h3 className="text-[13px]">Add a Due Date</h3>
                                 {dueDateLoading && (
                                   <div
                                     className="w-[20px] h-[20px] rounded-full animate-spin 
@@ -2293,9 +2482,9 @@ const SubTaskInnerList = ({ taskDetails }) => {
                                 onClick={handleClick}
                               >
                                 <div>
-                                  <SellIcon sx={{ fontSize: "18px" }} />
+                                  <SellIcon sx={{ fontSize: "16px" }} />
                                 </div>
-                                <h3>Add tags</h3>
+                                <h3 className="text-[13px]">Add tags</h3>
                               </div>
                               <div
                                 className="flex space-x-3 items-center mt-2 cursor-pointer"
@@ -2304,7 +2493,7 @@ const SubTaskInnerList = ({ taskDetails }) => {
                                 <div>
                                   <CheckIcon sx={{ fontSize: "18px" }} />
                                 </div>
-                                <h3>Convert to Task</h3>
+                                <h3 className="text-[13px]">Convert to Task</h3>
                                 {convertTaskLoading && (
                                   <div
                                     className="w-[20px] h-[20px] rounded-full animate-spin 
@@ -2316,7 +2505,7 @@ const SubTaskInnerList = ({ taskDetails }) => {
                                 <div>
                                   <SwapHorizIcon sx={{ fontSize: "18px" }} />
                                 </div>
-                                <h3>Move other task</h3>
+                                <h3 className="text-[13px]">Move other task</h3>
                               </div>
                               <div
                                 onClick={() => {
@@ -2324,12 +2513,12 @@ const SubTaskInnerList = ({ taskDetails }) => {
                                 }}
                                 className="flex space-x-3 items-center mt-2 cursor-pointer"
                               >
-                                <div>
+                                <div className="relative -top-[1px]">
                                   <DeleteOutlineIcon
-                                    sx={{ fontSize: "18px" }}
+                                    sx={{ fontSize: "18px", color: "red" }}
                                   />
                                 </div>
-                                <h3>Delete</h3>
+                                <h3 className="text-[13px]">Delete</h3>
                                 <div>
                                   {deleteTaskLoading && (
                                     <div
@@ -2346,19 +2535,19 @@ const SubTaskInnerList = ({ taskDetails }) => {
                     </PopupState>
                   </div>
                 </div>
-                <div className="pl-[1rem] flex space-x-2 mt-1 items-center">
-                  <h3 className="text-[15px]">
+                <div className="pl-[14px] flex space-x-2 mt-1 items-center">
+                  <h3 className="text-[13px]">
                     {moment(val?.dueDate).format("l")}
                   </h3>
                   <div className="flex w-full pl-[1rem] items-center flex-wrap">
-                    {taskDetails?.tags?.map((val) => {
+                    {taskDetails?.tags?.map((val, index) => {
                       return (
-                        <div className="pl-2 mt-2">
+                        <div className="pl-2 mt-1" key={index}>
                           <h3
                             style={{
                               background: val.color,
                             }}
-                            className="w-[90px] rounded flex items-center justify-center text-white text-[14px]"
+                            className="px-[12px] py-[3px] rounded flex items-center justify-center text-white text-[12px]"
                           >
                             {val?.name}
                           </h3>
@@ -2367,9 +2556,7 @@ const SubTaskInnerList = ({ taskDetails }) => {
                     })}
                   </div>
                 </div>
-                <div className="mt-3">
-                  <Divider />
-                </div>
+                <div className="mt-3 border-[#eee] border-b"></div>
               </>
             );
           })}
@@ -2423,15 +2610,15 @@ const SubTaskInnerList = ({ taskDetails }) => {
 
                   <Box>
                     <Grid container spacing={1}>
-                      {tagsColors?.map((val) => {
+                      {tagsColors?.map((val, index) => {
                         return (
-                          <Grid item xs={3}>
+                          <Grid item xs={3} key={index}>
                             <div
                               onClick={() => setSubtaskTagColor(val.color)}
                               className="h-[30px] w-[47px] rounded flex items-center justify-center"
                               style={{ background: val.color }}
                             >
-                              {val.color === subtaskTagColor && (
+                              {val?.color === subtaskTagColor && (
                                 <CheckIcon
                                   sx={{
                                     fontSize: "15px",
@@ -2496,9 +2683,10 @@ const SubTaskInnerList = ({ taskDetails }) => {
                     />
                   </div>
                   <div>
-                    {periorityTag?.map((val) => {
+                    {periorityTag?.map((val, index) => {
                       return (
                         <div
+                          key={index}
                           onClick={() => {
                             setTagId(val?.id);
                             // updateTags(val?.id);
@@ -2524,14 +2712,13 @@ const SubTaskInnerList = ({ taskDetails }) => {
 
                   <h3 className="py-2">Custom Tags</h3>
                   <div>
-                    {customTags?.map((val) => {
+                    {customTags?.map((val, index) => {
                       return (
                         <div className="flex space-x-2 items-center">
                           <div
-                            key={val.id}
+                            key={index}
                             onClick={() => {
-                              setSubtaskTagId(val.id);
-                              // updateTags(val?.id);
+                              setSubtaskTagId(val?.id);
                             }}
                             className={`w-[85%] h-[30px] text-white rounded flex items-center font-[500] justify-center mb-1`}
                             style={{
@@ -2589,15 +2776,24 @@ const SubTaskInnerList = ({ taskDetails }) => {
           control={control}
           name="name"
           render={({ field: { onChange, onBlur, value, name, ref } }) => (
-            <div className="mt-[0.1px] relative">
-              <span className="absolute top-1 left-[-15px] px-6">
-                <AddIcon sx={{ fontSize: "22px", color: "#B1B5D0" }} />
-              </span>
+            <div className=" relative mt-4 flex justify-between pl-3">
+              <div className="cursor-pointer px-[9px] min-w-[115px] mr-3 py-[3px] border border-[#eee] rounded-md flex items-center">
+                <span className="relative mr-[5px] -top-[2px]">
+                  <AddIcon sx={{ fontSize: "16px" }} />
+                </span>
+                <p
+                  className="text-[12px]"
+                  onClick={() => addSubtaskInTask(subTaskPayload)}
+                >
+                  Add subtask
+                </p>
+              </div>
+
               <input
                 onChange={onChange}
                 value={value}
                 placeholder="Add a new Task ..."
-                className="outline-none w-full  text-[12px] font-[500] border-gray-200 border-b h-[35px] pl-[3rem]"
+                className="outline-none w-full bg-none text-[12px] font-[500] h-[35px] pl-[1rem] border border-[#eee] rounded-md"
               />
             </div>
           )}
@@ -2609,7 +2805,9 @@ const SubTaskInnerList = ({ taskDetails }) => {
           className="mt-2 flex items-center ml-[1rem] cursor-pointer"
           onClick={() => setShowCompleted(!showCompleted)}
         >
-          <h2>{completeLengthCheck} &nbsp;Completed Task</h2>
+          <h2 className="text-[13px]">
+            {completeLengthCheck} &nbsp;Completed Task
+          </h2>
           <div>
             {showCompleted ? (
               <KeyboardArrowUpIcon />
@@ -2623,29 +2821,31 @@ const SubTaskInnerList = ({ taskDetails }) => {
       {showCompleted && (
         <div className="bg-[#FAFBFD]">
           <Zoom effect="left">
-            <div className="mt-4">
-              {completedSubTask?.map((val) => {
+            <div className="mt-3">
+              {completedSubTask?.map((val, index) => {
                 return (
                   <>
                     <div
                       className="flex justify-between w-full px-[0.5rem]"
-                      key={val?.id}
+                      key={index}
                     >
                       <div className="flex space-x-1 items-center">
                         <Checkbox
                           sx={{ fontSize: "6px" }}
-                          checked={true}
+                          checked={false}
                           onChange={() => handleChange(val?.subTaskId)}
+                          icon={
+                            <CheckCircleIcon
+                              sx={{ color: "#01B0A2", fontSize: "20px" }}
+                            />
+                          }
                         />
-                        <h3 className="line-through"> {val?.subTaskName}</h3>
+                        <h3 className="line-through text-[13px]">
+                          {" "}
+                          {val?.subTaskName}
+                        </h3>
                       </div>
                       <div className="flex space-x-2 items-center">
-                        {/* <div className="flex justify-center items-center h-[20px] rounded-md w-[20px] bg-white text-[#00A99B] border border-gray-200">
-                          <MapsUgcIcon sx={{ fontSize: "16px" }} />
-                        </div>
-                        <div className="flex justify-center items-center h-[20px] rounded-md w-[20px] bg-white text-[#00A99B] border border-gray-200">
-                          <PersonAddIcon sx={{ fontSize: "16px" }} />
-                        </div> */}
                         <div className="cursor-pointer">
                           <div>
                             <PopupState
@@ -2656,7 +2856,7 @@ const SubTaskInnerList = ({ taskDetails }) => {
                                 <div>
                                   <div
                                     {...bindTrigger(popupState)}
-                                    className="w-max cursor-pointer border border-gray-300 rounded-md bg-white flex items-center justify-center"
+                                    className="w-max px-1 py-[3px] cursor-pointer border border-gray-300 rounded-md bg-white flex items-center justify-center"
                                   >
                                     <MoreHorizIcon sx={{ fontSize: "17px" }} />
                                   </div>
@@ -2692,11 +2892,14 @@ const SubTaskInnerList = ({ taskDetails }) => {
                                           ></div>
                                         ) : (
                                           <>
-                                            <h1 className="text-[15px]">
+                                            <h1 className="text-[14px]">
                                               Delete
                                             </h1>
                                             <DeleteIcon
-                                              sx={{ fontSize: "18px" }}
+                                              sx={{
+                                                fontSize: "18px",
+                                                color: "#f00",
+                                              }}
                                             />
                                           </>
                                         )}
@@ -2710,9 +2913,7 @@ const SubTaskInnerList = ({ taskDetails }) => {
                         </div>
                       </div>
                     </div>
-                    <div className="mt-3">
-                      <Divider />
-                    </div>
+                    <div className="mt-3 border-[#eee] border-b"></div>
                   </>
                 );
               })}
@@ -2724,7 +2925,7 @@ const SubTaskInnerList = ({ taskDetails }) => {
       {/* tags popover */}
 
       <div className="mt-4 px-1">
-        <div className="mt-1 flex flex-wrap h-[100px] mx-[0.4rem]">
+        <div className="mt-1 flex flex-wrap">
           <div className="pt-2 p-1">
             <HookSelectFileInput
               name="attachment"
@@ -2733,10 +2934,13 @@ const SubTaskInnerList = ({ taskDetails }) => {
               allowMulti
             />
           </div>
-          {taskDetails?.attachments?.map((val) => {
+          {taskDetails?.attachments?.map((val, index) => {
             return (
-              <div className="flex flex-wrap pt-2 p-1" key={val?.id}>
-                <img src={val.file_path} className="w-[90px] rounded-md" />
+              <div className="flex flex-wrap pt-2 p-1" key={index}>
+                <img
+                  src={val?.file_path}
+                  className="h-[90px] w-[90px] rounded-md"
+                />
               </div>
             );
           })}

@@ -4,7 +4,10 @@ import tsconfigPaths from "vite-tsconfig-paths";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react(), tsconfigPaths()],
+  plugins: [react({
+        // include: "**/*.tsx",
+
+  }), tsconfigPaths()],
   define: {
     "process.env": {
       VITE_NODE_OPTIONS: '"--max-old-space-size=7168"',

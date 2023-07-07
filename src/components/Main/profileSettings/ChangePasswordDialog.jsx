@@ -78,13 +78,15 @@ const ChangePasswordDialog = () => {
         fullWidth
         open={open}
         onClose={() => dispatch(closeProfile())}
-        TransitionComponent={Transition}>
+        TransitionComponent={Transition}
+      >
         <CustomLoader isLoading={[isLoading].includes(true)} />
         <div className="flex justify-between px-[5px] items-center bg-[#fafbfd]">
           <div>
             <DialogTitle
               id="responsive-dialog-title"
-              className="font-bold text-[24px] font-Manrope">
+              className="font-bold text-[22px] font-Manrope"
+            >
               Change Password
             </DialogTitle>
           </div>
@@ -93,7 +95,8 @@ const ChangePasswordDialog = () => {
               edge="start"
               color="inherit"
               onClick={() => dispatch(closeProfile())}
-              aria-label="close">
+              aria-label="close"
+            >
               <CloseIcon
                 sx={{
                   width: "40px",

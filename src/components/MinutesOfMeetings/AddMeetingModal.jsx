@@ -90,7 +90,7 @@ export default function AddMeetingModal(props) {
     register,
   } = useForm({
     mode: "onChange",
-    defaultValues: { custom: false },
+    defaultValues: { custom: false, when: moment().format("YYYY-MM-DDTHH:mm") },
     resolver: yupResolver(meetingsSchema),
   });
 
@@ -235,7 +235,6 @@ export default function AddMeetingModal(props) {
                   Start Date
                 </h6>
                 <HookTextField
-                  defaultValue={moment().format("YYYY-MM-DDTHH:mm")}
                   min={new Date().toISOString().slice(0, 16)}
                   name="when"
                   errors={errors}

@@ -6,7 +6,7 @@
 #       - main
 #   pull_request:
 #     branches:
-#       - main 
+#       - main
 
 # env:
 #   VITE_API_URL: http://kbmhapis.graffitecs.com/v1
@@ -65,9 +65,7 @@
 #           # $Password = ${{ secrets.SERVER_PASSWORD }}
 #           pscp -batch -pw $Password -hostkey "ssh-ed25519 255 SHA256:GCozXgglesxBedTD1xUSIeyTi3Ky7M6immxD3pXZMxU" -logappend -r $env:GITHUB_WORKSPACE/dist/* administrator@207.180.230.73:$targetDir
 
-
-
-name: Nifty CI CD 
+name: Nifty CI CD
 
 on:
   push:
@@ -75,7 +73,7 @@ on:
       - main
   pull_request:
     branches:
-      - main 
+      - main
 
 env:
   VITE_API_URL: http://kbmhapis.graffitecs.com/v1

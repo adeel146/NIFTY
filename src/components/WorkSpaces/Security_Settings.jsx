@@ -47,7 +47,7 @@ const Security_Settings = () => {
               <label class="block mb-2 text-base font-medium text-[#2f2f2f]">
                 Wokspace Members Login Policy
               </label>
-              <p class="text-gray-700 mb-3">
+              <p class="text-[#9399AB] text-[14px] mb-2">
                 Require SSO or Two Factor Authentication to be enabled for all
                 members.
               </p>
@@ -77,7 +77,7 @@ const Security_Settings = () => {
           <label class="block mb-2 text-base font-medium text-[#2f2f2f] mt-6">
             Transfer Workspace
           </label>
-          <p class="text-gray-700 mb-4">
+          <p class="text-[#9399AB] text-[14px] mb-2">
             The account owner is the only person who can access all workspace
             settings and data. <br></br>
             You can transfer the workspace ownership to another user on the
@@ -91,7 +91,7 @@ const Security_Settings = () => {
           <label class="block mb-2 text-base font-medium text-[#2f2f2f] mt-6">
             Delete Workspace
           </label>
-          <p class="text-gray-700 mb-4">
+          <p class="text-[#9399AB] text-[14px] mb-2">
             Deleting your workspace on three60 cannot be undone. All projects,
             files, and data will be
             <br></br>

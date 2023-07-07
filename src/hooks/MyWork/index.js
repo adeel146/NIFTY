@@ -13,7 +13,30 @@ export const useGetProjectTasks = ({ type, search, projects, onSuccess }) => {
   });
   const projectTasks = grtProjectTasks.data?.data?.data ?? [];
 
-  return { projectTasks };
+  return { projectTasks, grtProjectTasks };
+};
+export const useGetAllMyTasks = ({ filter, sortBy, onSuccess }) => {
+  let url = `/task/get_all_my_tasks?`;
+  if (filter) url += `TaskFilter=${filter}`;
+  if (sortBy) url += `&TaskSort=${sortBy}`;
+  const getMyAllTasks = useAppQuery(url, url, {
+    onSuccess,
+  });
+  const myAllTasks = getMyAllTasks.data?.data?.data ?? [];
+
+  return { myAllTasks, getMyAllTasks };
+};
+export const useGellAllTasks = ({ id, filter, sortBy, onSuccess }) => {
+  let url = `/task/get_all_workspace_tasks/${id}?`;
+  if (filter) url += `TaskFilter=${filter}`;
+  if (sortBy) url += `&TaskSort=${sortBy}`;
+
+  const grtProjectTasks = useAppQuery(url, url, {
+    onSuccess,
+  });
+  const projectTasks = grtProjectTasks.data?.data?.data ?? [];
+
+  return { projectTasks, grtProjectTasks };
 };
 
 export const useGetProjectStatus = ({ id }) => {

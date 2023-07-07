@@ -145,7 +145,7 @@ const ProjectOverviewHeader = () => {
             <CompassIcon style={{ color: "black", fontSize: "25px" }} />
           </div>
           <div className=" flex space-x-5 text-[#2f2f2f] font-bold text-[18px] capitalize">
-            Overview
+            Analysis
           </div>
           {/* <input
             placeholder="Jump to Project..."

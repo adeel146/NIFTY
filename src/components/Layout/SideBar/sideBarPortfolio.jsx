@@ -25,7 +25,7 @@ import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import { makeStyles } from "@mui/styles";
 import { useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { links } from "static/links";
 import GreenButton from "hooks/Common/commonButtons/GreenButton";
 import AddPortfolioDialog from "components/Main/portfolio/AddPortfolioDialog";
@@ -37,12 +37,15 @@ import WhiteButton from "hooks/Common/commonButtons/WhiteButton";
 import EmailIcon from "@mui/icons-material/Email";
 import PersonIcon from "@mui/icons-material/Person";
 import SettingsIcon from "@mui/icons-material/Settings";
-import { portfolioIdSet } from "redux/actions";
+import { duplicateProjectDialogOpen, portfolioIdSet } from "redux/actions";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
+import DuplicateProjectDialog from "components/Main/portfolio/DuplicateProjectDialog";
 
 const sideBarPortfolio = () => {
   const navigate = useNavigate();
+  const location = useLocation().pathname;
+  const { id: portfolioId, projectId } = useParams();
   const classes = useStyles();
   const [isOpen, setIsOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -247,7 +250,8 @@ const sideBarPortfolio = () => {
       return;
     }
     if (key === "duplicate") {
-      navigate(`/project/duplicate/${id}`);
+      dispatch(duplicateProjectDialogOpen());
+      setActiveProjectId(id);
       return;
     }
     if (key === "archive") {
@@ -332,7 +336,9 @@ const sideBarPortfolio = () => {
                             ref={draggableProvided.innerRef}
                           >
                             <div
-                              className="w-full border-[#eee] border-b py-2 pl-0 flex align-center items-center cursor-pointer justify-between mr-3"
+                              className={` ${
+                                portfolioId == portfolio?.id ? "active" : ""
+                              } w-full border-[#eee] border-b py-2 pl-0 flex align-center items-center cursor-pointer justify-between mr-3`}
                               onClick={() => {
                                 navigate(`${links.portfolio}/${portfolio.id}`);
                               }}
@@ -676,7 +682,11 @@ const sideBarPortfolio = () => {
                                             return (
                                               <>
                                                 <div
-                                                  className="flex items-center justify-center  mt-[10px] mb-[10px]"
+                                                  className={` ${
+                                                    projectId == project?.id
+                                                      ? "active-project"
+                                                      : ""
+                                                  } flex mt-[10px] mb-[10px] py-1`}
                                                   onMouseEnter={() =>
                                                     handleChildMouseEnter(
                                                       project?.id
@@ -703,6 +713,7 @@ const sideBarPortfolio = () => {
                                                     }}
                                                   >
                                                     <DragIndicatorIcon
+                                                      sx={{ width: "16px" }}
                                                       className={
                                                         childIsHovered &&
                                                         childId == project?.id
@@ -726,11 +737,11 @@ const sideBarPortfolio = () => {
                                                           height: "18px",
                                                           width: "18px",
                                                         }}
-                                                        className="text-[2px] h-[15px]  w-[15px] mr-[8px] flex align-center justify-center"
+                                                        className="text-[2px] h-[15px] text-[#efefef]  w-[15px] mr-[8px] flex align-center justify-center"
                                                       >
-                                                        <h2 className="text-[10px]">
+                                                        <span className="text-[10px]">
                                                           {sliceName}
-                                                        </h2>
+                                                        </span>
                                                       </Icon>
                                                     </p>
                                                     <h3 className="text-[14px]">
@@ -741,7 +752,7 @@ const sideBarPortfolio = () => {
                                                   {childIsHovered &&
                                                   childId == project?.id ? (
                                                     <>
-                                                      <span className="mr-[2rem]">
+                                                      <span className="ml-[5px]">
                                                         <MoreHorizIcon
                                                           className="text-[#9399AB]"
                                                           width="1.0277777777777777em"
@@ -827,6 +838,7 @@ const sideBarPortfolio = () => {
                 );
               })}
               {provided.placeholder}
+              <DuplicateProjectDialog projectId={activeProjectId} />
             </div>
           )}
         </Droppable>
@@ -842,7 +854,7 @@ const projectContextOptions = [
   { name: "Invite Guests", key: "invite" },
   { name: "Project Settings", key: "settings" },
   { name: "Duplicate Project", key: "duplicate" },
-  { name: "Move Project", key: "move" },
+  { name: "Edit Project", key: "move" },
   { name: "Archive Project", key: "archive" },
   { name: "Delete Project", key: "delete" },
 ];
@@ -851,12 +863,12 @@ const useStyles = makeStyles((theme) => ({
   hiddenDiv: {
     visibility: "hidden",
     //   paddingTop: "0.25rem",
-    paddingBottom: "0.25rem",
+    //paddingBottom: "0.25rem",
   },
   visibleDiv: {
     visibility: "visible",
     //   paddingTop: "0.25rem",
-    paddingBottom: "0.25rem",
+    //paddingBottom: "0.25rem",
   },
   listItem: {
     "&:hover": {

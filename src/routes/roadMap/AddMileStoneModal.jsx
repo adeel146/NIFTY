@@ -57,6 +57,8 @@ export default function AddMileStoneDialog(props) {
   const classes = useStyles();
   const { projectId } = useParams();
 
+  const workspaceId = localStorage.getItem("workspaceId");
+
   const { mutate, isLoading } = useMutation({
     mutationKey: ["addMilestone"],
     mutationFn: (data) => axios.post("/milestone", data),
@@ -73,6 +75,23 @@ export default function AddMileStoneDialog(props) {
       console.log(data, "error");
       enqueueSnackbar(data.response.data.message, { variant: "error" });
     },
+  });
+
+  const { data: usersList } = useQuery({
+    queryKey: "workspace/workspace_members",
+    queryFn: () => axios.get(`workspace/workspace_members/${workspaceId}`),
+    select: (res) => {
+      return res?.data?.data.map((val) => {
+        return {
+          value: val?.user_Id,
+          label: val?.name,
+        };
+      });
+    },
+    onError: (data) => {
+      enqueueSnackbar(data.response.data.message, { variant: "error" });
+    },
+    refetchOnWindowFocus: false,
   });
 
   const { data: milestoneDependency } = useQuery(
@@ -94,10 +113,12 @@ export default function AddMileStoneDialog(props) {
   );
 
   const onSubmit = (data) => {
+    const manager_Id = data.manager_Id.value;
     data.parent_Id = data?.parent_Id?.value || null;
     const payload = {
       project_Id: projectId,
       ...data,
+      manager_Id,
     };
     mutate(payload);
   };
@@ -155,6 +176,7 @@ export default function AddMileStoneDialog(props) {
                   type="textarea"
                 />
               </div>
+
               <div className="flex space-x-2 ">
                 <HookTextField
                   name="startDate"
@@ -170,6 +192,7 @@ export default function AddMileStoneDialog(props) {
                   labelText="End"
                   type="date"
                 />
+
                 <PopupState variant="popover" popupId="demo-popup-popover">
                   {(popupState) => (
                     <div>
@@ -224,6 +247,18 @@ export default function AddMileStoneDialog(props) {
                     </div>
                   )}
                 </PopupState>
+              </div>
+              <div className="mb-1">
+                {" "}
+                <HookSelectField
+                  labelText="Sponser"
+                  name="manager_Id"
+                  errors={errors}
+                  control={control}
+                  required={false}
+                  placeholder="Search..."
+                  loadOptions={usersList}
+                />
               </div>
               <div>
                 <label>Add Milestone Dependency (optional):</label>

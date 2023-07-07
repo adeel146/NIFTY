@@ -31,6 +31,8 @@ import PopupState, { bindPopover, bindTrigger } from "material-ui-popup-state";
 import GreenButton from "hooks/Common/commonButtons/GreenButton";
 import WhiteButton from "hooks/Common/commonButtons/WhiteButton";
 import CustomProgressBar from "hooks/Common/CustomProgressBar";
+import Slider from "@mui/material/Slider";
+import { useAuth } from "hooks/useAuth";
 
 const MileStoneDrawer = () => {
   const {
@@ -41,8 +43,9 @@ const MileStoneDrawer = () => {
 
   const [name, setName] = useState("Open Tasks");
   const [check, setCheck] = useState(true);
-  const [drawyerWidth, setDrawyerWidth] = useState(1200);
+  const [drawyerWidth, setDrawyerWidth] = useState(700);
   const [dateShow, setDateShow] = useState(false);
+  const [sliderVal, setSliderVal] = useState(0);
   const [isOpendateChange, setIsOpendateChange] = useState(false);
   const { enqueueSnackbar } = useSnackbar();
   const queryClient = useQueryClient();
@@ -50,6 +53,8 @@ const MileStoneDrawer = () => {
   const { milestoneState: open, milestoneId } = useSelector(
     (state) => state?.dashbordSlice
   );
+
+  const auth = useAuth();
   const isSubTaskShow = useSelector((state) => state.projectTaskSlice.subTask);
   let { projectId } = useParams();
   const [dependencyShow, setDependencyShow] = useState(false);
@@ -84,15 +89,13 @@ const MileStoneDrawer = () => {
             key: "selection",
           },
         ];
+        setSliderVal(data.completed);
         setDateRangeVal(payload);
       },
       enabled: !!milestoneId,
       refetchOnWindowFocus: false,
     }
   );
-
-
-  console.log(mileStoneDetails,"mileStoneDetails")
 
   const { data: milestoneDependency } = useQuery(
     ["dropdown_dependency", projectId],
@@ -113,8 +116,6 @@ const MileStoneDrawer = () => {
     }
   );
 
-
-
   const { mutate: updateDateRande, isLoading: updatingDateRange } = useMutation(
     {
       mutationKey: ["milestone_date_update", milestoneId],
@@ -132,6 +133,19 @@ const MileStoneDrawer = () => {
       },
     }
   );
+  const { mutate: updateCompleted } = useMutation({
+    mutationKey: ["updateCompleted", milestoneId],
+    mutationFn: (value) =>
+      axios.put(`milestone/update_completed/${milestoneId}?completed=${value}`),
+    onSuccess: (data) => {
+      if (data.data.success) {
+        enqueueSnackbar(data.data.message, { variant: "success" });
+      }
+    },
+    onError: (data) => {
+      enqueueSnackbar(data.response.data.message, { variant: "error" });
+    },
+  });
   const { mutate: updateDependancy } = useMutation({
     mutationKey: ["milestone_dependancy"],
     mutationFn: (dependancyId) =>
@@ -240,15 +254,31 @@ const MileStoneDrawer = () => {
               <>
                 <div className="px-[1rem]">
                   <div className="flex justify-between items-center">
-                  <h3 className=" text-[19px] font-[500]">
-                    {mileStoneDetails?.name}
-                  </h3>
-                  <div className="mr-28">
-                    <CustomProgressBar completed={mileStoneDetails?.completed} />
+                    <h3 className=" text-[19px] font-[500]">
+                      {mileStoneDetails?.name}
+                    </h3>
+                    <div className="mr-28 w-[300px] flex space-x-2 ">
+                      <div className="w-full">
+                        {/* <CustomProgressBar completed={mileStoneDetails?.completed} /> */}
+                        <Slider
+                          disabled={
+                            auth.user.id === mileStoneDetails?.manager_Id
+                          }
+                          onChange={(a, b) => {
+                            setSliderVal(b);
+                          }}
+                          onChangeCommitted={(a, b) => {
+                            updateCompleted(b);
+                          }}
+                          value={sliderVal}
+                          aria-label="Default"
+                          valueLabelDisplay="auto"
+                        />
+                      </div>
+                      <p>{sliderVal}</p>
+                    </div>
                   </div>
 
-                  </div>
-                 
                   <p className="mt-[10px] text-[#B1B5D0] font-[500] text-[15px]">
                     {mileStoneDetails?.description}
                   </p>

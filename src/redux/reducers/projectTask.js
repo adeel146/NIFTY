@@ -10,6 +10,7 @@ const initialState = {
   taskId: null,
   subtaskDetailShow: false,
   personalTaskDrwayerState: false,
+  changeRequestDialogState: false,
   sidebarWidth: "300px",
   settingSide: "300px",
   portfolioIdcheck: null,
@@ -25,6 +26,8 @@ const initialState = {
   persisDateValue: null,
   newRequestType: null,
   milestoneProgress: false,
+  moduleInformation: null,
+  duplicateProjectDialogState: false,
 };
 
 const projectTaskSlice = createSlice({
@@ -79,6 +82,18 @@ const projectTaskSlice = createSlice({
     },
     personalTaskDrawyerOpen(state) {
       state.personalTaskDrwayerState = true;
+    },
+    changeRequestDialogOpen(state) {
+      state.changeRequestDialogState = true;
+    },
+    changeRequestDialogClose(state) {
+      state.changeRequestDialogState = false;
+    },
+    duplicateProjectDialogOpen(state) {
+      state.duplicateProjectDialogState = true;
+    },
+    duplicateProjectDialogClose(state) {
+      state.duplicateProjectDialogState = false;
     },
     personalTaskDrawyerClose(state) {
       state.personalTaskDrwayerState = false;
@@ -153,6 +168,9 @@ const projectTaskSlice = createSlice({
     closeMilestoneProgress(state) {
       state.milestoneProgress = false;
     },
+    setModuleInformation(state, action) {
+      state.moduleInformation = action.payload;
+    },
   },
 });
 
@@ -196,6 +214,11 @@ export const {
   setNewRequestType,
   closeMilestoneProgress,
   openMilestoneProgress,
+  setModuleInformation,
+  changeRequestDialogOpen,
+  changeRequestDialogClose,
+  duplicateProjectDialogOpen,
+  duplicateProjectDialogClose,
 } = projectTaskSlice.actions;
 
 export default projectTaskSlice.reducer;

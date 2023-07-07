@@ -11,6 +11,7 @@ export const milestoneSchema = yup.object({
   name: yup.string().required("Name is Required"),
   description: yup.string().required("Description is Required"),
   color: yup.string().default("#b22e2e").required("Color is Required"),
+  manager_Id: yup.object().required("Sponsor is Required"),
 });
 export const meetingsSchema = yup.object({
   name: yup.string().required("Name is Required"),

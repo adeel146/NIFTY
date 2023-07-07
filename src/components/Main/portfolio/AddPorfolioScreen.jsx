@@ -22,7 +22,7 @@ import { ErrorMessage } from "@hookform/error-message";
 import { useDisplayError } from "hooks/useDisplayError";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { addProjectSchema } from "validations/portfolio";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { links } from "static/links";
 import HookTextField from "hooks/Common/HookTextField";
 import HookSelectField from "hooks/Common/HookSelectField";
@@ -49,10 +49,9 @@ const AddPorfolioScreen = () => {
   const [setNameVal, setSetNameVal] = useState("");
   const [owner, setOwner] = useState();
   const [CRList, setCRList] = useState([]);
-  const { portfolioId } = useParams();
-
-  console.log(taskView, "viewww ");
-
+  const location = useLocation();
+  const getId = location.state;
+  console.log(getId, "id");
   const queryClient = useQueryClient();
 
   const [nameError, setnameError] = useState(false);
@@ -223,10 +222,21 @@ const AddPorfolioScreen = () => {
 
   const onGetworkspacePortfoliosSuccess = (data) => {
     if (data.data?.data.length) {
-      setPortfolio({
-        value: data?.data?.data[0].id,
-        label: data?.data?.data[0].name,
-      });
+      if (getId?.id) {
+        if (
+          data.data?.data.filter((el) => el.id === parseInt(getId?.id)).length
+        ) {
+          setPortfolio({
+            value: data.data?.data.filter(
+              (el) => el.id === parseInt(getId?.id)
+            )[0].id,
+            label: data.data?.data.filter(
+              (el) => el.id === parseInt(getId?.id)
+            )[0].name,
+          });
+          return;
+        }
+      }
     }
   };
   const { workspacePortfolios } = useAppGetWorkSpacePortfolios({
@@ -404,10 +414,8 @@ const AddPorfolioScreen = () => {
                       handlePortfolioSelect(e);
                     }}
                   >
-                    {portfolio
-                      ? `Current Selected ${portfolio.label}`
-                      : "Select"}
-                    <span className="arrow font-bold text-sm ml-2 relative top-1 ">
+                    {portfolio ? `${portfolio.label}` : "Select Project"}
+                    <span className="arrow font-bold text-sm ml-2 relative  ">
                       <svg
                         className="text-[12px] inline-flex "
                         width="1.0277777777777777em"
@@ -449,24 +457,44 @@ const AddPorfolioScreen = () => {
                     anchorEl={portfolioAnchorEl}
                     placement="bottom"
                   >
-                    <Paper>
-                      <div className="flex items-center  justify-center  ">
-                        <Select
-                          options={workspacePortfoliosOptions}
-                          name="portfolio"
-                          onChange={(value) => {
-                            setPortfolio(value);
-                            setPortfolioAnchorEl(null);
-                          }}
-                          value={portfolio}
-                          isSearchable
-                          placeholder="Search portfolios"
-                          className="react-select"
-                          defaultMenuIsOpen
-                          styles={customStyles} // Apply the custom styles to the react-select component
-                        />
-                      </div>
-                    </Paper>
+                    {/* <Paper> */}
+                    <div
+                      tabIndex={0}
+                      className=" bg-white  border border-[#E8E8E9] rounded w-[170px]  "
+                    >
+                      <ul className="py-1">
+                        {workspacePortfoliosOptions?.length ? (
+                          workspacePortfoliosOptions?.map(
+                            (workspacePortfolios) => (
+                              <li key={workspacePortfolios.value}>
+                                <span
+                                  onClick={(value) => {
+                                    setPortfolio(workspacePortfolios);
+                                    setPortfolioAnchorEl(null);
+                                  }}
+                                  className={` cursor-pointer block px-4 py-2 font-Manrope text-[14px]  hover:bg-[#F2FFFE] hover:text-[#00B8A9] ${
+                                    getId &&
+                                    parseInt(getId.id) ===
+                                      workspacePortfolios.value
+                                      ? "text-[#00B8A9] bg-[#F2FFFE]"
+                                      : ""
+                                  } `}
+                                >
+                                  {workspacePortfolios.label}
+                                </span>
+                              </li>
+                            )
+                          )
+                        ) : (
+                          <li>
+                            <span className=" cursor-pointer block px-4 py-2 font-Manrope text-[12px]  hover:bg-[#F2FFFE] hover:text-[#00B8A9] ">
+                              No portfolio found
+                            </span>
+                          </li>
+                        )}
+                      </ul>
+                    </div>
+                    {/* </Paper> */}
                   </Popper>
                 </div>
               </div>

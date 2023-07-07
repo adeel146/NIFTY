@@ -296,7 +296,7 @@ export default function ShareModal(props) {
             <div className="mt-4">
               <div className="flex flex-col">
                 <h6 className="font-Manrope font-bold text-base mb-1">
-                  Share with teammates
+                  Share with {customUser ? "Custom User" : "Team Mates"}
                 </h6>
                 <div className="flex justify-between">
                   <p className="font-Manrope font-semibold text-sm">
@@ -507,49 +507,31 @@ export default function ShareModal(props) {
               <p className="font-Manrope font-semibold text-base">
                 Access to all notes
               </p>
-              <div className="flex justify-between ">
-                <div className="flex mt-2 space-x-2">
-                  <Avatar
-                    sx={{
-                      width: "24px",
-                      height: "24px",
-                    }}
-                  />
-                  <div className="">
-                    <p>Zarmeen Iqbal</p>
+              {selectedmeeting.users.map((user, index) => {
+                return (
+                  <div key={index} className="flex justify-between mb-2 ">
+                    <div className="flex mt-2 space-x-2">
+                      <Avatar
+                        sx={{
+                          width: "24px",
+                          height: "24px",
+                        }}
+                      />
+                      <div className="">
+                        <p>{user.name}</p>
+                      </div>
+                    </div>
+                    <div className="border bg-gray-200 px-1 rounded-md flex ">
+                      <p className="font-medium pl-2 pt-[2px]">Can edit</p>{" "}
+                      <ArrowDropDownOutlinedIcon
+                        sx={{
+                          marginTop: "3px",
+                        }}
+                      />
+                    </div>
                   </div>
-                </div>
-                <div className="border bg-gray-200 px-1 rounded-md flex ">
-                  <p className="font-medium pl-2 pt-[2px]">Can edit</p>{" "}
-                  <ArrowDropDownOutlinedIcon
-                    sx={{
-                      marginTop: "3px",
-                    }}
-                  />
-                </div>
-              </div>
-              <div className="flex justify-between mt-2">
-                <div className="flex mt-2 space-x-2">
-                  <Avatar
-                    sx={{
-                      width: "24px",
-                      height: "24px",
-                    }}
-                  />
-                  <div className="">
-                    <p>Zarmeen Iqbal</p>
-                  </div>
-                </div>
-                <div className="flex space-x-1 mr-2">
-                  <p className="font-medium pl-2 pt-[2px]">Can edit</p>{" "}
-                  <LockOutlinedIcon
-                    sx={{
-                      fontSize: "16px",
-                      marginTop: "7px",
-                    }}
-                  />
-                </div>
-              </div>
+                );
+              })}
             </div>
           </div>
           <input type="submit" className="hidden" />
@@ -566,7 +548,7 @@ export default function ShareModal(props) {
             style={{ width: "140px" }}
             disabled={isLoading}
             loading={isLoading}
-            buttonText="Create"
+            buttonText="Save"
             onClick={
               watch("custom") ? handleSubmitCustomUser : handleSubmit(onSubmit)
             }

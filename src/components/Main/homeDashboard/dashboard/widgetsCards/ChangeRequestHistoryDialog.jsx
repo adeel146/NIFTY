@@ -5,7 +5,7 @@ import { useParams } from "react-router-dom";
 import GreenButton from "hooks/Common/commonButtons/GreenButton";
 import { useNavigate } from "react-router-dom";
 import { Typography } from "@mui/material";
-import { listTypeRequest } from "redux/actions";
+import { changeRequestDialogClose, listTypeRequest } from "redux/actions";
 import { useDispatch } from "react-redux";
 import { useSelector } from "react-redux";
 import { useAuth } from "hooks/useAuth";
@@ -13,8 +13,20 @@ import { useSnackbar } from "notistack";
 import moment from "moment";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
+import DialogTitle from "@mui/material/DialogTitle";
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import Slide from "@mui/material/Slide";
+import CloseIcon from "@mui/icons-material/Close";
+import { Divider } from "@mui/material";
+import WhiteButton from "hooks/Common/commonButtons/WhiteButton";
 
-const ChangeRequestListing = () => {
+const Transition = React.forwardRef(function Transition(props, ref) {
+    return <Slide direction="up" ref={ref} {...props} />;
+  });
+const ChangeRequestHistoryDialog = () => {
+    const open = useSelector((state) => state?.projectTaskSlice?.changeRequestDialogState);
   const { projectId } = useParams();
   const auth = useAuth();
   const { enqueueSnackbar } = useSnackbar();
@@ -83,8 +95,41 @@ const ChangeRequestListing = () => {
       </div>
     );
 
+    const closeModal = () => {
+       dispatch(changeRequestDialogClose());
+    };
+    
+
   return (
-    <div className="pb-[2rem]">
+    <Dialog
+      maxWidth="md"
+      open={open}
+      onClose={closeModal}
+      TransitionComponent={Transition}
+    >
+              <DialogTitle className="bg-[#fafbfd] w-full">
+        <div className=" flex justify-between">
+          <h1 className="font-Manrope font-extrabold text-black text-2xl">
+            Change Request History
+          </h1>
+          <div className="space-x-3">
+            <CloseIcon
+              sx={{
+                width: "33px",
+                height: "33px",
+                fill: "gray",
+                fontSize: "18px",
+                padding: "3px 3px",
+              }}
+              className="border bg-white hover:bg-[#f98a3f] hover:fill-white rounded-md cursor-pointer "
+              onClick={() => dispatch(changeRequestDialogClose())}
+            />
+          </div>
+        </div>
+      </DialogTitle>
+      <Divider />
+      <DialogContent>
+      <div className="">
       {changeRequestList?.length > 0 ? (
         <div className="mt-10 pb-[3rem] ">
           {changeRequestList?.map((val) => {
@@ -104,38 +149,13 @@ const ChangeRequestListing = () => {
                   <div
                     className={`post_box_white bg-white px-7 py-7 cursor-pointer rounded-lg relative before:absolute before:-left-[1px] before:top-[0px] before:rounded-l-lg  before:w-[3px] before:h-[100%] before:border-l-[#${randomColor}] before:border-l-4  shadow-sm border border-[#eee]`}
                   >
-                    <div className="flex justify-end">
-                      {val.status === 1 || val.status === 3 ? (
-                        <GreenButton
-                          buttonText="Activate"
-                          disabled={val.status === 1 || val.status === 3}
-                        />
-                      ) : (
-                        <GreenButton
-                          onClick={(e) => {
-                            e.preventDefault();
-                            activeRequest(val?.id);
-                          }}
-                          buttonText="Activate"
-                          loading={editLoading}
-                          disabled={val.status === 1 || val.status === 3}
-                        />
-                      )}
-                    </div>
-
                     <ul
                       className="w-full list-none flex flex-wrap"
-                      onClick={() => {
-                        navigate(
-                          `/dashboard/add-request/${val?.id}/${projectId}`
-                        );
-                        dispatch(listTypeRequest("edit"));
-                      }}
                     >
                       <li className="w-[33%] mb-3 pb-3 border border-b-[#eee] border-t-0 border-l-0 border-r-0">
                         <div className="flex">
                           <h4 className="font-bold text-[16px] mb-0 font-Manrope text-[#2f2f2f] mr-3">
-                            CR #
+                            CR 
                           </h4>
                           <p className="text-[15px] mb-0 font-Manrope text-[#2f2f2f] font-normal">
                             {val?.id}
@@ -231,12 +251,34 @@ const ChangeRequestListing = () => {
           })}
         </div>
       ) : (
-        <div className="flex justify-center items-center h-[100vh]">
+        <div className="flex justify-center items-center">
           <h1>No Data Found</h1>
         </div>
       )}
     </div>
+      </DialogContent>
+      <DialogActions className="border-t bg-[#fafbfd]">
+        <div className="flex justify-end my-5 items-center mr-4 space-x-2">
+          <WhiteButton
+            style={{ width: "60px" }}
+            buttonText="Close"
+            onClick={() => dispatch(changeRequestDialogClose())}
+          />
+          {/* <GreenButton
+            style={{ width: "140px" }}
+            disabled={isLoading}
+            loading={isLoading}
+            buttonText="Save"
+            type="submit"
+            onClick={
+              watch("custom") ? handleSubmitCustomUser : handleSubmit(onSubmit)
+            }
+          /> */}
+        </div>
+      </DialogActions>
+    </Dialog>
+   
   );
 };
 
-export default ChangeRequestListing;
+export default ChangeRequestHistoryDialog;

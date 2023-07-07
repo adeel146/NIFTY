@@ -131,15 +131,17 @@ export default function ManagePortfolio({
         }}
         open={open}
         onClose={handleClose}
-        TransitionComponent={Transition}>
+        TransitionComponent={Transition}
+      >
         <DialogTitle className="bg-[#fafbfd]">
           <div className="flex justify-between px-[5px] items-center">
-            <h1 className="font-bold text-[#373737] text-[24px] font-Manrope">
+            <h1 className="font-bold text-[#373737] text-[20px] font-Manrope">
               Manage Portfolio
             </h1>
             <div
               onClick={handleClose}
-              className="cursor-pointer border border-[#e8e8e8] bg-[#fff] shadow-[0 3px 5px 0 rgba(0,0,0,.05)] px-[6px] py-[2px] rounded-md hover:bg-[#f98a3f] hover:text-[#fff]">
+              className="cursor-pointer border border-[#e8e8e8] bg-[#fff] shadow-[0 3px 5px 0 rgba(0,0,0,.05)] px-[6px] py-[2px] rounded-md hover:bg-[#f98a3f] hover:text-[#fff]"
+            >
               <CloseIcon className="relative -top-[1px]" />
             </div>
           </div>
@@ -148,10 +150,10 @@ export default function ManagePortfolio({
         <DialogContent className={classes.dialogPaper}>
           <form>
             <div className="w-[450px]">
-              <p className="text-[16px] font-bold font-Manrope text-[#2f2f2f]">
+              <p className="text-[16px] font-bold mb-3 font-Manrope text-[#2f2f2f]">
                 Portfolio Name
               </p>
-              <h6 className="mt-1 mb-2 text-[14px] font-semibold font-Manrope">
+              <h6 className="mb-1 font-Manrope font-medium text-[14px] text-[#9399AB]">
                 All workspace members will join the General portfolio by
                 default.
               </h6>
@@ -166,15 +168,15 @@ export default function ManagePortfolio({
                 />
               </div>
               <div className="mt-3">
-                <h3 className="text-[16px] font-bold font-Manrope text-[#2f2f2f]">
+                <h3 className="text-[16px] mb-3 font-bold font-Manrope text-[#2f2f2f]">
                   Portfolio Members
                 </h3>
-                <h6 className="mt-1 mb-1 text-[14px] font-semibold font-Manrope">
+                <h6 className="mb-1 font-Manrope font-medium text-[14px] text-[#9399AB]">
                   Members added to this portfolio will be given access to all
                   public projects within the portfolio.
                 </h6>
               </div>
-              <div className="mt-6">
+              <div className="mt-1">
                 <HookSelectField
                   name="members"
                   errors={errors}

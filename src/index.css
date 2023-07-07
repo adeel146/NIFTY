@@ -138,18 +138,29 @@ body .custom_table table tr td {
 {
   display: inline-block !important;
 }
-
-@media screen and (max-width: 1400px) {
-  .leftTasview-fixed {
-    position: sticky;
-    left: 0;
-    width: 30%;
-    min-width: 30%;
-    background: #f5f5f5;
-    overflow: hidden;
-    z-index: 999;
-  }
+.sidebar_collapse .active.flex
+{
+  color: #333 !important;
 }
+.sidebar_collapse .active-project
+{
+  color: #333 !important;
+}
+.profileSetting-page label,
+.profileSetting-page label h3
+{
+  font-size: 14px !important;
+  color: #9399AB !important;
+  font-weight: 600 !important;
+}
+.profileSetting-page input,
+.profileSetting-page select,
+.profileSetting-page label input
+{
+  font-size: 14px !important;
+  font-weight: 400 !important;
+}
+
 
 .task-modal {
   position: fixed;
@@ -173,4 +184,15 @@ body .custom_table table tr td {
 .cross-icon {
   margin-left: 4px;
   cursor: pointer;
+}
+@media screen and (max-width: 1400px) {
+  .leftTasview-fixed {
+    position: sticky;
+    left: 0;
+    width: 30%;
+    min-width: 30%;
+    background: #f5f5f5;
+    overflow: hidden;
+    z-index: 999;
+  }
 }

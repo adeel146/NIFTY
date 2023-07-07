@@ -185,7 +185,7 @@ const Column = (props) => {
       projectId: +projectId,
       milestone_Id: milestoneValue ? milestoneValue : null,
       dueDate: DateRangeVal[0]?.endDate,
-      assignees: [assignee ? assignee : null],
+      assignees: assignee ? [ assignee ]: [],
     };
     addTask(payload);
   };

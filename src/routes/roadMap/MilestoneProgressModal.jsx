@@ -26,6 +26,7 @@ import { useParams } from "react-router-dom";
 import { closeMilestoneProgress } from "redux/actions";
 import { useDispatch } from "react-redux";
 import { map } from "lodash";
+import CircularProgress from "@mui/material/CircularProgress";
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -63,6 +64,7 @@ export default function MilestoneProgressModal({ data }) {
     dispatch(closeMilestoneProgress());
   };
 
+  console.log(milestoneWeight, "milestoneWeight");
   const containerStyles = {
     height: 30,
     textAlign: "center",
@@ -105,53 +107,8 @@ export default function MilestoneProgressModal({ data }) {
     fontWeight: "400",
   };
 
-  //   const { mutate, isLoading } = useMutation({
-  //     mutationKey: ["addMilestone"],
-  //     mutationFn: (data) => axios.post("/milestone", data),
-  //     onSuccess: (data) => {
-  //       console.log(data, "success");
-  //       enqueueSnackbar(data.data.message, { variant: "success" });
-  //       queryClient.invalidateQueries(["get-milestone"]);
-  //       reset();
-  //       queryClient.invalidateQueries([queryKeySet]);
-  //       handleClose();
-  //       reset();
-  //     },
-  //     onError: (data) => {
-  //       console.log(data, "error");
-  //       enqueueSnackbar(data.response.data.message, { variant: "error" });
-  //     },
-  //   });
-
-  //   const { data: milestoneDependency } = useQuery(
-  //     ["dropdown_dependency", projectId],
-  //     () => {
-  //       return axios.get(`/milestone/listing/${projectId}`);
-  //     },
-  //     {
-  //       enabled: !!projectId,
-  //       select: (res) => {
-  //         return res.data.data.map((val) => {
-  //           return {
-  //             label: val?.name,
-  //             value: val?.id,
-  //           };
-  //         });
-  //       },
-  //     }
-  //   );
-
-  //   const onSubmit = (data) => {
-  //     data.parent_Id = data?.parent_Id?.value || null;
-  //     const payload = {
-  //       project_Id: projectId,
-  //       ...data,
-  //     };
-  //     mutate(payload);
-  //   };
-
   useEffect(() => {
-    const list = map(milestoneWeight, "completedPercentage");
+    const list = map(milestoneWeight, "weightage");
     const totalValue = list?.reduce(
       (previousScore, currentScore, index) => previousScore + currentScore,
       0
@@ -166,12 +123,12 @@ export default function MilestoneProgressModal({ data }) {
       if (elem?.id == id && values <= 95) {
         return {
           ...elem,
-          completedPercentage: elem?.completedPercentage + 1,
+          weightage: elem?.weightage + 1,
         };
       } else if (elem?.id == id && values > 95 && values < 100) {
         return {
           ...elem,
-          completedPercentage: 100,
+          weightage: 100,
         };
       } else {
         return elem;
@@ -185,12 +142,12 @@ export default function MilestoneProgressModal({ data }) {
       if (elem?.id == id && values > 3) {
         return {
           ...elem,
-          completedPercentage: elem?.completedPercentage - 1,
+          weightage: elem?.weightage - 1,
         };
       } else if (elem?.id == id && values > 0 && values <= 3) {
         return {
           ...elem,
-          completedPercentage: 0,
+          weightage: 0,
         };
       }
       return elem;
@@ -199,7 +156,7 @@ export default function MilestoneProgressModal({ data }) {
   };
 
   function EnableButton(value) {
-    if (value > 0 && value < 100) {
+    if (value >= 0 && value < 100) {
       return true;
     } else if (value > 100) {
       return true;
@@ -207,6 +164,28 @@ export default function MilestoneProgressModal({ data }) {
       return false;
     }
   }
+
+  const payloadWeight = milestoneWeight?.map((val) => {
+    return {
+      id: val?.id,
+      weightage: val?.weightage,
+    };
+  });
+
+  const { mutate: updateWeight, isLoading } = useMutation({
+    mutationKey: ["update_weight"],
+    mutationFn: (data) => axios.put(`milestone/update_weightage`, data),
+    onSuccess: (data) => {
+      if (data.data.success) {
+        enqueueSnackbar(data.data.message, { variant: "success" });
+        dispatch(closeMilestoneProgress());
+        queryClient.invalidateQueries(["get-milestone"]);
+      }
+    },
+    onError: (data) => {
+      enqueueSnackbar(data.response.data.message, { variant: "error" });
+    },
+  });
 
   return (
     <div>
@@ -217,7 +196,6 @@ export default function MilestoneProgressModal({ data }) {
         onClose={handleClose}
         TransitionComponent={Transition}
       >
-        {/* <CustomLoader isLoading={[isLoading].includes(true)} /> */}
         <DialogTitle>
           <div className="flex justify-center items-center">
             <h1 className="text-[22px]">Milestones Waight Setup </h1>
@@ -225,7 +203,7 @@ export default function MilestoneProgressModal({ data }) {
         </DialogTitle>
         <Divider />
         <DialogContent className={classes.dialogPaper}>
-          <div className="h-[100px] py-2 w-full px-3 border border-gray-300 rounded-[14px]">
+          <div className="h-[120px] py-2 w-full px-3 border border-gray-300 rounded-[14px]">
             <h1 className="text-[18px] font-bold">Milesone Percetange</h1>
             <div className="flex space-x-6  items-center">
               <div className="mt-4 w-[80%]">
@@ -235,10 +213,26 @@ export default function MilestoneProgressModal({ data }) {
                   </div>
                 </div>
               </div>
-              <div className="w-[20%] border h-[32px] rounded-[12px] mt-4 flex justify-center items-center border-gray-300">
-                <button disabled={EnableButton(completed)}>save</button>
+              <div
+                style={{
+                  background: completed == 100 ? "#00A99B" : "white",
+                  color: completed == 100 ? "white" : "black",
+                }}
+                className="w-[20%] border h-[32px] rounded-[12px] mt-4 flex justify-center items-center border-gray-300"
+              >
+                <button
+                  disabled={EnableButton(completed)}
+                  onClick={() => updateWeight(payloadWeight)}
+                >
+                  {isLoading ? <CircularProgress size={20} /> : "Save"}
+                </button>
               </div>
             </div>
+            {completed > 100 && (
+                <p className="text-[15px] pl-[1px] pt-[1px] text-red-500">
+                  Cannot Exceeded to 100
+                </p>
+            )}
           </div>
           <div>
             <div className="py-2 w-full px-3 border border-gray-300 rounded-[14px] min-h-[200px] mt-8">
@@ -248,12 +242,9 @@ export default function MilestoneProgressModal({ data }) {
                     <div className="flex space-x-5 items-center">
                       <div>
                         <button
-                          disabled={val?.completedPercentage <= 0}
+                          disabled={val?.weightage <= 0}
                           onClick={() =>
-                            minusPercentageWeight(
-                              val?.id,
-                              val?.completedPercentage
-                            )
+                            minusPercentageWeight(val?.id, val?.weightage)
                           }
                           className="w-[35px] mt-4 h-[30px] flex justify-center items-center text-white text-[25px] border bg-[#9399AB] rounded-[5px]"
                         >
@@ -265,11 +256,9 @@ export default function MilestoneProgressModal({ data }) {
                           <div
                             style={{
                               height: "100%",
-                              width: `${val?.completedPercentage}%`,
+                              width: `${val?.weightage}%`,
                               backgroundColor: `${
-                                val?.completedPercentage == 100
-                                  ? "#00A99B"
-                                  : "#FF614B"
+                                val?.weightage == 100 ? "#00A99B" : val?.color
                               }`,
                               borderRadius: "inherit",
                               textAlign: "right",
@@ -277,29 +266,31 @@ export default function MilestoneProgressModal({ data }) {
                               fontWeight: "400",
                               paddingTop: "3px",
                               transition: "width 0.2s ease-in-out",
+                              position: "relative",
                             }}
                           >
                             <span
                               style={{
                                 padding: 8,
-                                color:
-                                  val?.completedPercentage == 100
-                                    ? "#fff"
-                                    : "#333",
+                                color: val?.weightage == 100 ? "#fff" : "#333",
                                 fontWeight: "400",
+                                position: "absolute",
+                                left: "80px",
+                                top: "-5px",
+                                fontSize: "14px",
                               }}
-                            >{`${val?.completedPercentage?.toFixed(0)}%`}</span>
+                            >{` (${val?.weightage?.toFixed(0)}%) `}</span>
+                            <p className="absolute w-[100px] text-left left-[6px] top-[3px] text-[14px]">
+                              {val?.name}
+                            </p>
                           </div>
                         </div>
                       </div>
                       <div>
                         <button
-                          disabled={val?.completedPercentage >= 100}
+                          disabled={val?.weightage >= 100}
                           onClick={() =>
-                            addPercentageWeight(
-                              val?.id,
-                              val?.completedPercentage
-                            )
+                            addPercentageWeight(val?.id, val?.weightage)
                           }
                           className="w-[35px] flex justify-center items-center mt-4 h-[30px] text-white text-[25px] border bg-[#9399AB] rounded-[5px]"
                         >

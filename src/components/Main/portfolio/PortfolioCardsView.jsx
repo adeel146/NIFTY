@@ -53,7 +53,7 @@ const PortfolioCardsView = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  console.log(id,"id")
+  console.log(id, "id");
 
   const [sectionShow, setSectionShow] = useState(true);
   const idPortfolio = useSelector(
@@ -93,8 +93,6 @@ const PortfolioCardsView = () => {
   const { PortfolioMembersCount } = useGetPortfolioMembersCount(id);
   const { PortfolioReportsProjects } = useGetPortfolioReportsProjects(id);
 
-  console.log(PortfolioMembersCount, "PortfolioMembersCount");
-  console.log(PortfolioReportsProjects, "PortfolioReportsProjects");
   const checkPercentage = (percentage) => {
     if (percentage === 0) {
       return "NOT STARTED";
@@ -174,7 +172,7 @@ const PortfolioCardsView = () => {
     }
   }, [PortfolioMembersCount, id]);
   useEffect(() => {
-  if (FinanceByPortfolio?.projects?.length) {
+    if (FinanceByPortfolio?.projects?.length) {
       const financialInfoSettings = {
         series: [
           {
@@ -291,9 +289,9 @@ const PortfolioCardsView = () => {
             <div className="flex relative left-1">
               <h1 className=" flex  text-[#2f2f2f] font-bold text-[18px] capitalize">
                 {porfolioData?.name}{" "}
-                <span className="relative top-[2px]">
+                {/* <span className="relative top-[2px]">
                   <MoreHorizIcon />
-                </span>
+                </span> */}
               </h1>
             </div>
             <div
@@ -317,7 +315,7 @@ const PortfolioCardsView = () => {
                 <ImportExportIcon />
               </div> */}
 
-            <div onClick={() => navigate(`/add/project/${id}`)}>
+            <div onClick={() => navigate(`/add/project`, { state: { id } })}>
               <GreenButton buttonText="Create a Project" />
             </div>
           </Stack>
@@ -591,6 +589,7 @@ const PortfolioCardsView = () => {
           {PortfolioReportsProjects?.length > 0 ? (
             PortfolioReportsProjects?.map((el) => {
               const selectedStatus = status.find((s) => s?.id === el?.status);
+              console.log(PortfolioReportsProjects, "selectedStatus");
               return (
                 <div
                   onClick={() => navigate(`/dashboard/${el?.id}`)}
@@ -726,7 +725,7 @@ const PortfolioCardsView = () => {
                         ></div>
                       </div>
                       <span className="ml-3 text-[15px] font-semibold text-[#DE3B3B]">
-                        {Math.round(el.completePercentage).toFixed(2)}%
+                        {Math.round(el.completePercentage).toFixed()}%
                       </span>
                     </div>
                   </div>
@@ -750,10 +749,10 @@ const PortfolioCardsView = () => {
                       </div>
                       <div className="flex w-[33%] py-3 pl-3 flex-col">
                         <p className="text-[#2f2f2f] text-[12px] font-Manrope">
-                          Remaning
+                          Remaning AED
                         </p>
                         <h4 className="text-[13px] text-[#1FC2D1] font-bold">
-                          {el.remaininBudget.toLocaleString()} AED
+                          {el.remaininBudget.toLocaleString()}
                         </h4>
                       </div>
                     </div>

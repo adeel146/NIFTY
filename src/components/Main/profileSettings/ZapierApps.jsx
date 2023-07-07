@@ -181,7 +181,8 @@ function ZapierApps() {
 
               <div
                 className="pt-3  cursor-pointer"
-                onClick={() => setSectionShow(false)}>
+                onClick={() => setSectionShow(false)}
+              >
                 <CloseIcon
                   sx={{
                     color: "#02bebd",
@@ -199,7 +200,8 @@ function ZapierApps() {
                 Have more questions?
                 <a
                   href="#"
-                  className="font-Manrope text-[#00ac9e] ml-[6px] text-[15px] font-semibold">
+                  className="font-Manrope text-[#00ac9e] ml-[6px] text-[15px] font-semibold"
+                >
                   Ask us
                   <span className="ml-[3px]">✌️</span>
                 </a>
@@ -207,7 +209,7 @@ function ZapierApps() {
             </div>
           </div>
         )}
-        <div className="flex ml-11 mt-11 gap-3 bg-white">
+        <div className="flex ml-11 mt-11 gap-3 ">
           <div className="">
             <h3 className="font-bold font-Manrope text-base mb-3">
               Connect this app...
@@ -235,13 +237,14 @@ function ZapierApps() {
             />
           </div>
         </div>
-        <div className="h-[240px] w-[55%] mt-6 cursor-pointer ml-11 flex flex-wrap flex-col bg-white">
+        <div className="h-[240px] w-[55%] mt-6 cursor-pointer ml-11 flex flex-wrap flex-col ">
           {zapierApps.map((el) => (
             <div
               key={el.id}
               className={` ${
                 el.id === 1 || el.id === 4 ? "border-t" : ""
-              } hover:outline hover:outline-[#00A99B] hover:outline-1 border-b  font-semibold font-Manrope text-black hover:text-[#00A99B] mt-3 h-16 w-[45%] py-3 pl-5 ml-3`}>
+              } hover:outline hover:outline-[#00A99B] hover:outline-1 border-b  font-semibold font-Manrope text-black hover:text-[#00A99B] mt-3 h-16 w-[45%] py-3 pl-5 ml-3`}
+            >
               <span className=" flex ml-2 mb-2 gap-4">
                 <img
                   className="w-10 h-10 border p-1 rounded-lg"
@@ -255,14 +258,15 @@ function ZapierApps() {
             </div>
           ))}
         </div>
-        <div className="ml-11 cursor-pointer bg-white">
-          <h2 className="font-bold text-2xl mb-6 font-Manrope">
+        <div className="ml-11 cursor-pointer ">
+          <h2 className="font-bold text-1xl mb-6 font-Manrope">
             Popular with three60 users
           </h2>
           {popularZapierApps.map((el) => (
             <div
               className="border border-gray-300 w-[58%] bg-[#fafbfd] py-6 text-base font-semibold font-Manrope shadow-md 
-                   hover:border hover:border-[#00A99B] hover:text-[#00A99B] mb-3 flex justify-between">
+                   hover:border hover:border-[#00A99B] hover:text-[#00A99B] mb-3 flex justify-between"
+            >
               <div className="flex ml-7 gap-2 flex-auto ">
                 <img
                   className="w-10 h-10 border border-gray-300 p-[5px] rounded-lg  bg-white"
@@ -276,25 +280,27 @@ function ZapierApps() {
                 />
                 {el.desc}
               </div>
-              <div className="bg-[#424242] text-white py-[9px] px-7 rounded font-semibold text-center font-Manrope float-right mr-5 hover:bg-black">
+              <div className="bg-[#9399AB] text-white py-[9px] px-7 rounded font-semibold text-center font-Manrope float-right mr-5 hover:bg-black">
                 <button className="min-w-[30px]">Use this Zap</button>
               </div>
             </div>
           ))}
-          <div className="text-center w-[58%] mb-14 bg-white">
+          <div className="text-center w-[58%] mb-14 ">
             <p className="font-medium font-Manrope">
               Not seeing what you're looking for?
             </p>
             <p>
               <a
                 href="#"
-                className="underline text-[#02bdad] font-Manrope hover:text-[#009084]">
+                className="underline text-[#02bdad] font-Manrope hover:text-[#009084]"
+              >
                 Create from scratch
               </a>{" "}
               or
               <a
                 href="#"
-                className="underline text-[#02bdad] font-Manrope hover:text-[#009084]">
+                className="underline text-[#02bdad] font-Manrope hover:text-[#009084]"
+              >
                 learn more
               </a>
             </p>

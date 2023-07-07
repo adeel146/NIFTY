@@ -48,18 +48,16 @@ export default function TagsDialog({ tagsAssignList }) {
         <Divider />
         <DialogContent className={classes.dialogPaper}>
           <Grid container spacing={2}>
-            {tagsAssignList?.map((val) => {
+            {tagsAssignList?.map((val, index) => {
               return (
-                <>
-                  <Grid item xs={3}>
-                    <div
-                      className="rounded-md h-auto text-white flex items-center justify-center"
-                      style={{ background: val?.color }}
-                    >
-                      {val.name}
-                    </div>
-                  </Grid>
-                </>
+                <Grid item xs={3} key={index}>
+                  <div
+                    className="rounded-md h-auto text-white flex items-center justify-center"
+                    style={{ background: val?.color }}
+                  >
+                    {val.name}
+                  </div>
+                </Grid>
               );
             })}
           </Grid>

@@ -41,6 +41,8 @@ const HookRadioBox = ({
                             },
                           }}
                           size="small"
+                          // checked={val?.value === "PublicKey"? true: false}
+                          // disabled={val?.value === "PublicKey" ? true: false }
                         />
                       }
                       label={val.label}

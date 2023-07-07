@@ -47,15 +47,16 @@ const ManageMembersTab = () => {
     <>
       <div className="w-[100%] selectedTabs">
         <div>
-          <p className="text-[14px]">
+          <p className="text-[#2f2f2f] text-[16px] font-semibold font-Manrope mb-1">
             DHL WORKSPACE MEMBERS ({`${members?.length}`})
             <Tooltip
               title={
                 <p
-                  className="bg-[#fff] text-[#2f2f2f] text-[14px] p-[10px]"
+                  className="bg-[#fff] text-[#2f2f2f] text-[14px] !font-medium p-[10px]"
                   style={{
                     borderRadius: "8px",
-                    boxShadow: "0 2px 12px 0 rgba(0,0,0,.36)",
+                    boxShadow: "none",
+                    border: "none",
                   }}
                 >
                   <b>Owner</b> can manage all projects, members and billing for
@@ -87,7 +88,15 @@ const ManageMembersTab = () => {
                   const memberSlice = member?.name?.slice(0, 1);
 
                   return (
-                    <Card key={index} className={classes.card} style={{maxWidth: "350px", marginBottom: "10px", marginTop: "10px"}}>
+                    <Card
+                      key={index}
+                      className={classes.card}
+                      style={{
+                        maxWidth: "350px",
+                        marginBottom: "10px",
+                        marginTop: "10px",
+                      }}
+                    >
                       <CardContent>
                         <div className="flex align-center">
                           {member?.photo?.file_path ? (

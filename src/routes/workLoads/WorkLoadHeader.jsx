@@ -259,7 +259,7 @@ const WorkloadHeader = () => {
           {activeProject?.name?.charAt(0)?.toUpperCase() ?? ""}
         </div>
         <div className="absolute left-[80px] top-1 flex space-x-5 text-[#2f2f2f] font-bold text-[18px] capitalize">
-          {activeProject?.name ?? ""} <ExpandMoreIcon />
+          {activeProject?.name ?? ""}
         </div>
       </div>
       <div className="bg-white flex justify-between items-center pr-8 pl-[80px] border border-b-[#e8e8e8]">

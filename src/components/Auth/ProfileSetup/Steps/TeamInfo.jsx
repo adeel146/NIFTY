@@ -15,8 +15,7 @@ function TeamInfo() {
     formState: { errors },
   } = useForm({});
 
-  const workspace = (data) => {
-  }
+  const workspace = (data) => {};
 
   const workspaceId = localStorage.getItem("workspaceId");
   const workspaceData = useGetWorkspaceById({
@@ -24,9 +23,7 @@ function TeamInfo() {
     onSuccess: workspace,
   });
 
-  const onSuccess = (data) => {
-    console.log(data);
-  };
+  const onSuccess = (data) => {};
 
   const handleClick = () => {
     setOpen(true);

@@ -58,6 +58,7 @@ const Milestone = ({ setCardWidth, setCheck, check }) => {
   const handleOpen = () => {
     setIsOpen(true);
   };
+  console.log(mileStoneCardList,"mileStoneCardList")
 
   return (
     <div>
@@ -112,7 +113,7 @@ const Milestone = ({ setCardWidth, setCheck, check }) => {
                       </span>
                     </div>
                     <span className="entry-progress relative text-[14px] font-semibold -right-2 tag-pill completed float-right bg-[#d9f2f0] rounded-xl rounded-r-none pl-2 pr-2 text-[#009084] ">
-                      {val?.completed + "%"}
+                      {val?.completedPercentage + "%"}
                     </span>
                   </div>
                   <div className="flex space-x-2 px-2 pt-2 items-center">

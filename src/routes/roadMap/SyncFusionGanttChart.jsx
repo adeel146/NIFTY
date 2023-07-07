@@ -11,17 +11,22 @@ import "../../syncfusion.css";
 import "./index.css";
 import { Button, ButtonGroup } from "@mui/material";
 import moment from "moment";
+import Splitter from "./Splitter";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import DescriptionIcon from "@mui/icons-material/Description";
 import AddIcon from "@mui/icons-material/Add";
+import AddMileStoneDialog from "./AddMileStoneModal";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import { useDispatch, useSelector } from "react-redux";
 import { openMilestone } from "redux/reducers/mainDashbord";
+import MileStoneDrawer from "components/Main/homeDashboard/dashboard/widgetsCards/milestones/MileStoneDrawer";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import { useSnackbar } from "notistack";
+import TaskDrwayer from "components/Main/homeDashboard/dashboard/widgetsCards/taskwidget/TaskDrwayer";
 import { taskDrawyerOpen } from "redux/actions";
+import { isEmpty } from "lodash";
 import CustomLoader from "hooks/Common/CustomLoader";
 import * as _ from "lodash";
 import { Box } from "@mui/system";
@@ -33,28 +38,26 @@ import AvatarGroup from "@mui/material/AvatarGroup";
 import { Popover, Tooltip } from "@mui/material";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import { useAuth } from "hooks/useAuth";
-import AddMileStoneDialog from "routes/roadMap/AddMileStoneModal";
-import MileStoneDrawer from "components/Main/homeDashboard/dashboard/widgetsCards/milestones/MileStoneDrawer";
-import TaskDrwayer from "components/Main/homeDashboard/dashboard/widgetsCards/taskwidget/TaskDrwayer";
-import TurnRightIcon from "@mui/icons-material/TurnRight";
-import PixIcon from "@mui/icons-material/Pix";
-import HelpIcon from "@mui/icons-material/Help";
 import ArrowBack from "../../../public/icons/ArrowBack";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import { isEmpty } from "lodash";
-import CircularProgress from "@mui/material/CircularProgress";
+import MilestoneProgressModal from "./MilestoneProgressModal";
+import { openMilestoneProgress } from "redux/actions";
+import HelpIcon from "@mui/icons-material/Help";
 
-function TimeLine() {
+function GantChart({ data: milestoneData }) {
   const [defaultWidth, setdefaultWidth] = React.useState("25%");
   const [mileStonesList, setMileStonesList] = React.useState([]);
   const [isOpenAddMileStone, setisOpenAddMileStone] = React.useState(false);
   const [viewMode, setViewMode] = React.useState("Month");
-  const [selectedPortfolio, setSelectedPortfolio] = React.useState(null);
   let ganttInstance;
   const { milestoneState } = useSelector((state) => state?.dashbordSlice);
   const isOpenTaskDrawer = useSelector(
     (state) => state?.projectTaskSlice?.taskState
   );
+  const dispatch = useDispatch();
+  const isOpen = useSelector(
+    (state) => state.projectTaskSlice.milestoneProgress
+  );
+
   const loginUserDetail = useAuth();
 
   const getWorkingDays = React.useMemo(() => {
@@ -74,37 +77,81 @@ function TimeLine() {
 
     return workingDays;
   }, []);
+
+  console.log(getWorkingDays, "getWorkingDays");
   const taskFields = {
     id: "id",
     name: "name",
     startDate: "startDate",
     endDate: "endDate",
     // duration: "duration",
-    child: "milestone",
+    child: "tasks",
     dependency: "predecessor",
-    // progress: "completed",
+    progress: "progress",
   };
 
+  let { projectId } = useParams();
   const { enqueueSnackbar } = useSnackbar();
 
-  const workspaceId = localStorage.getItem("workspaceId");
+  //   const { data: milestoneData, isLoading } = useQuery({
+  //     queryKey: ["get-milestone", projectId],
+  //     queryFn: () => axios.get(`milestone/${projectId}`),
+  //     // onSuccess: (data) => {
+  //     //   // console.log(data, "testresponse");
+  //     //   // let updatedArr = data.data.data.map((obj) => {
+  //     //   //   return {
+  //     //   //     ...obj,
+  //     //   //     progress: obj.completedPercentage,
+  //     //   //     tasks:
+  //     //   //       obj.tasks.length > 0
+  //     //   //         ? obj.tasks.map((task) => {
+  //     //   //             return {
+  //     //   //               ...task,
+  //     //   //               progress: task.completedPercentage,
+  //     //   //             };
+  //     //   //           })
+  //     //   //         : [],
+  //     //   //   };
+  //     //   // });
 
-  const { isLoading } = useQuery({
-    queryKey: ["get-portfolio-milestone", selectedPortfolio],
-    queryFn: () =>
-      axios.get(
-        `portfolio/all_portfolio_details?workspace_Id=${workspaceId}${
-          selectedPortfolio !== null ? "&model=" + selectedPortfolio.value : ""
-        }`
-      ),
-    onSuccess: (data) => {
-      setMileStonesList(data.data.data);
-    },
-    onError: (data) => {
-      enqueueSnackbar(data.response.data.message, { variant: "error" });
-    },
-    refetchOnWindowFocus: false,
-  });
+  //     //   // console.log(updatedArr, "updatedArr");
+  //     //   setMileStonesList(data.data.data);
+  //     // },
+  //     select: (data) => {
+  //       let updatedArr = data.data.data.map((obj) => {
+  //         return {
+  //           ...obj,
+  //           progress: 30,
+  //           tasks:
+  //             obj.tasks.length > 0
+  //               ? obj.tasks.map((task) => {
+  //                   return {
+  //                     ...task,
+  //                     progress: 30,
+  //                   };
+  //                 })
+  //               : [],
+  //         };
+  //       });
+  //       return updatedArr;
+  //     },
+  //     onError: (data) => {
+  //       enqueueSnackbar(data.response.data.message, { variant: "error" });
+  //     },
+  //     refetchOnWindowFocus: false,
+  //   });
+
+  // const projectStartDate = milestoneData[0]?.projectStartDate
+  //   ? moment(milestoneData[0]?.projectStartDate)
+  //       .subtract(15, "days")
+  //       .format("MM/DD/YYYY")
+  //   : new Date();
+  // const projectEndDate = milestoneData[0]?.projectEndDate
+  //   ? moment(milestoneData[0]?.projectEndDate
+  //     )
+  //       .add(60, "days")
+  //       .format("MM/DD/YYYY")
+  //   : new Date();
 
   const { mutate: updateMilestoneDate } = useMutation({
     mutationKey: ["milestone/change_date/"],
@@ -140,17 +187,26 @@ function TimeLine() {
   const splitterSettings = {
     position: defaultWidth,
     columnIndex: 2,
+    template: <Splitter />,
     separatorSize: 1,
   };
 
   const timelineSettings = {
-    timelineUnitSize: 100,
-    height: 100,
+    timelineUnitSize: 50,
     timelineViewMode: viewMode,
-    topTier: {
-      unit: "Month",
-      format: "MMMMMMMMM",
-    },
+    // topTier: {
+    //   unit: "Month",
+    //   format: "MMMMMMMMM",
+    // },
+    // bottomTier: {
+    //   unit: "Day",
+    //   format: "ddd DD",
+    //   formatter: (date) => {
+    //     const day = moment(date).format("ddd");
+    //     const dayNumber = moment(date).format("DD");
+    //     return `${day} ${dayNumber}`;
+    //   },
+    // },
   };
 
   // Event handler for actionComplete event
@@ -181,142 +237,85 @@ function TimeLine() {
   const queryTaskbarInfo = (args) => {
     console.log(args, "queryTaskbarInfo");
     args.taskbarBorderColor = "transparent";
-    // const currentDate = new Date();
-    // if (new Date(args.data.endDate) < currentDate) {
-    //   return (args.taskbarBgColor = "#FF8585");
-    // }
-
-    if (!args.data.taskData.isProject) {
+    const currentDate = new Date();
+    if (new Date(args.data.endDate) < currentDate) {
+      return (args.taskbarBgColor = "#FF8585");
+    }
+    if (args.data.taskData.isTask) {
       args.progressBarBgColor = "#22B07D";
       args.taskbarBgColor = "#00AD9F";
+    } else if (!args.data.taskData.isTask) {
+      args.progressBarBgColor = "#DEDEE0";
+      args.taskbarBgColor = args.data.taskData.color || "#9399AB";
     } else {
-      args.progressBarBgColor = "#374253";
-      args.taskbarBgColor = args.data.taskData.color || "#DEDEE0";
+      args.progressBarBgColor = "#FFBA2F";
+      args.taskbarBgColor = "#FFBA2F";
     }
   };
 
+  // Event handler for actionBegin event
+  // function handleActionBegin(args) {
+  //   console.log(args, "handleActionBegin");
+  // }
+
+  //for custom taskabar
+
+  // function TaskbarTemplate(props) {
+  //   return (
+  //     <div className="e-gantt-child-taskbar-inner-div e-gantt-child-taskbar">
+  //       <div className="e-gantt-child-progressbar-inner-div e-gantt-child-progressbar"></div>
+  //       <span className="e-task-label">{props.TaskName}</span>
+  //     </div>
+  //   );
+  // }
+  // function ParentTaskbarTemplate(props) {
+  //   return (
+  //     <div className="e-gantt-parent-taskbar-inner-div e-gantt-parent-taskbar">
+  //       <div className="e-gantt-parent-progressbar-inner-div e-row-expand e-gantt-parent-progressbar"></div>
+  //       <span className="e-task-label">{props.TaskName}</span>
+  //     </div>
+  //   );
+  // }
+
+  // function customizeCell(args) {
+  //   console.log(args, "arg");
+  //   args.cell.style.backgroundColor = "lightgreen";
+  //   if (args.column.field == "Progress") {
+  //     args.cell.style.backgroundColor = "lightgreen";
+  //   }
+  // }
+  // function rowDataBound(args) {
+  //   if (args.data.TaskID == 43) args.row.style.backgroundColor = "red";
+  // }
+  const toolbarOptions = [
+    "PrevTimeSpan",
+    "NextTimeSpan",
+    "ExpandAll",
+    "CollapseAll",
+  ];
+
   const CustomHeaderTemplate = () => {
-    const [open, setopen] = React.useState(false);
-    console.log(mileStonesList?.projectCount, "mileStonesList?.projectCount");
-    const [anchorEl, setAnchorEl] = React.useState(null);
-    const [portfolio, setportfolio] = React.useState({});
-    const handleClose = () => {
-      setAnchorEl(null);
-      setopen(false);
-    };
-
-    const { data: PortfolioList } = useQuery(
-      ["workspace_portfolios"],
-      () => {
-        return axios.get(`portfolio/workspace_portfolios/${workspaceId}`);
-      },
-      {
-        enabled: !!workspaceId,
-        select: (res) => {
-          return res.data.data.map((val) => {
-            return {
-              label: val?.name,
-              value: val?.id,
-            };
-          });
-        },
-        refetchOnWindowFocus: false,
-      }
-    );
-
     return (
-      <div key={mileStonesList?.id} className="bg-[#FAFBFD] !h-[80px] px-3  ">
-        <p
-          onClick={(event) => {
-            setAnchorEl(event.currentTarget);
-            setopen(true);
-          }}
-          className="text-sm leading-4 pt-3 w-max cursor-pointer !font-semibold font-Manrope text-[#333]"
-        >
-          {isEmpty(portfolio)
-            ? "All Portfolios"
-            : portfolio.label + " Portfoli"}
-
-          <span>
-            <KeyboardArrowDownIcon />
-          </span>
-        </p>
-        <p className="text-[#9399AB] text-[12px] leading-6">
-          {mileStonesList?.projectCount} Projects{" "}
-          <span>
-            <HelpIcon fontSize="12px" />
-          </span>{" "}
-        </p>
-        {Boolean(open) && (
-          <Popover
-            onClose={handleClose}
-            sx={{
-              height: "200px",
-            }}
-            open={Boolean(open)}
-            anchorEl={anchorEl}
-            anchorOrigin={{
-              vertical: "bottom",
-              horizontal: "center",
-            }}
-            transformOrigin={{
-              vertical: "top",
-              horizontal: "center",
-            }}
-          >
-            <div
-              tabIndex={0}
-              className=" bg-white  border border-[#E8E8E9] rounded w-[270px]  "
-            >
-              <ul className="py-1">
-                <li>
-                  <input
-                    type="text"
-                    className=" text-[13px] border-0 border-b-slate-50"
-                    placeholder="Search assignee"
-                    // onChange={handleFilterChange}
-                  />
-                </li>
-                <li>
-                  <div
-                    onClick={() => {
-                      setSelectedPortfolio(null);
-                      setportfolio(null);
-                      handleClose();
-                    }}
-                    className="flex cursor-pointer items-center px-4 py-2 font-Manrope capitalize text-[14px] font-semibold  hover:bg-[#F2FFFE] hover:text-[#00B8A9] "
-                  >
-                    All Portfolios
-                  </div>
-                </li>
-                {PortfolioList?.map((el) => (
-                  <li key={el.value}>
-                    <div
-                      onClick={() => {
-                        setSelectedPortfolio(el);
-                        setportfolio(el);
-                        handleClose();
-                      }}
-                      className="flex cursor-pointer items-center px-4 py-2 font-Manrope capitalize text-[14px] font-semibold  hover:bg-[#F2FFFE] hover:text-[#00B8A9] "
-                    >
-                      {el.label}{" "}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </Popover>
-        )}
+      <div
+        key={milestoneData.length || 0}
+        className="bg-[#FAFBFD] h-full px-3 py-1 "
+      >
+        <div className="">
+          <h3 className="text-[14px] text-[#333] font-medium">
+            Milestones List
+          </h3>
+          <p className="text-[#9399AB] text-[12px] leading-6">
+            {milestoneData?.length}
+            {milestoneData?.length < 2 ? " Milestone " : " Milestones "}
+            <span>
+              <HelpIcon fontSize="12px" />
+            </span>{" "}
+          </p>
+        </div>
       </div>
     );
   };
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-[25em]">
-        <CircularProgress />
-      </div>
-    );
-  }
+
   return (
     <>
       {isOpenAddMileStone && (
@@ -332,9 +331,9 @@ function TimeLine() {
         <p
           style={{
             position: "absolute",
-            top: 25,
+            top: 50,
             zIndex: 999,
-            left: defaultWidth === "0%" ? "0px" : "24.2%",
+            left: defaultWidth === "0%" ? "0px" : "24.5%",
             backgroundColor: "white",
             cursor: "pointer",
             transform: defaultWidth === "0%" && "rotate(180deg)",
@@ -350,18 +349,17 @@ function TimeLine() {
             fontSize="medium"
           />
         </p>
-        <div className="h-[100%] overflow-auto ">
+        <div className="h-[100%]">
           <GanttComponent
-            id="Default"
-            key={mileStonesList?.projectCount}
+            key={milestoneData.length || 0}
+            id="RoadMap"
             ref={(gantt) => (ganttInstance = gantt)}
-            dataSource={mileStonesList?.projects}
+            dataSource={milestoneData}
             taskFields={taskFields}
-            editSettings={editSettings}
+            // editSettings={editSettings}
             queryTaskbarInfo={queryTaskbarInfo}
             // taskbarTemplate={taskbarTemplate}
-            rowHeight={55}
-            disabled={true}
+            rowHeight={114}
             taskbarHeight={30}
             connectorLineBackground="#dedee0"
             connectorLineWidth={2}
@@ -371,14 +369,13 @@ function TimeLine() {
             // rowDataBound={rowDataBound}
             gridLines="Both"
             height="100%"
-            splitterResizing={false}
             splitterSettings={splitterSettings}
             timelineSettings={timelineSettings}
             actionComplete={handleActionComplete}
             // actionBegin={handleActionBegin} // Assign the event handler here
             workWeek={getWorkingDays}
-            // toolbar={toolbarOptions}
-            enableVirtualization={true}
+            toolbar={toolbarOptions}
+            splitterResizing={false}
           >
             <ColumnsDirective>
               <ColumnDirective
@@ -388,27 +385,50 @@ function TimeLine() {
               ></ColumnDirective>
               <ColumnDirective field="id" visible={false}></ColumnDirective>
             </ColumnsDirective>
-            {/* <Inject services={[Edit]} /> */}
+            <Inject services={[Edit, Toolbar]} />
           </GanttComponent>
         </div>
       </div>
-      {/* <Button
+
+      <Button
         onClick={() => setisOpenAddMileStone(true)}
         sx={{
+          display: "flex",
           position: "absolute",
           zIndex: 999,
-          bottom: 5,
-          left: "310px",
-          width: "20em",
+          right: 470,
+          top: 100,
           background: "#00AC9E",
           color: "white",
           "&:hover": {
             background: "#00AC9E",
           },
         }}
+        size="small"
+        variant="outlined"
+        aria-label="outlined button group"
       >
         + Add A MileStone
       </Button>
+
+      <div>
+        <Button
+          onClick={() => dispatch(openMilestoneProgress())}
+          sx={{
+            display: "flex",
+            position: "absolute",
+            zIndex: 999,
+            right: 220,
+            top: 100,
+          }}
+          size="small"
+          variant="outlined"
+          aria-label="outlined button group"
+        >
+          Calculate Milestone Weight
+        </Button>
+      </div>
+
       <Box
         sx={{
           display: "flex",
@@ -425,7 +445,7 @@ function TimeLine() {
             position: "absolute",
             zIndex: 999,
             right: 20,
-            top: 90,
+            top: 92,
             // background: "#00AC9E",
             // color: "white",
           }}
@@ -433,12 +453,12 @@ function TimeLine() {
           variant="outlined"
           aria-label="outlined button group"
         >
-          <Button
+          {/* <Button
             onClick={() => setViewMode("Day")}
             variant={viewMode === "Day" ? "contained" : "outlined"}
           >
             Day
-          </Button>
+          </Button> */}
           <Button
             onClick={() => setViewMode("Week")}
             variant={viewMode === "Week" ? "contained" : "outlined"}
@@ -458,12 +478,13 @@ function TimeLine() {
             Year
           </Button>
         </ButtonGroup>
-      </Box> */}
+      </Box>
+      {isOpen && <MilestoneProgressModal data={milestoneData} />}
     </>
   );
 }
 
-export default TimeLine;
+export default GantChart;
 
 const TaskNameTemplate = (props) => {
   const {
@@ -483,10 +504,10 @@ const TaskNameTemplate = (props) => {
   console.log(taskData, "propsmilestone");
   const [isOpenSubTasks, setisOpenSubTasks] = React.useState(expanded);
   const [taskVal, seTtaskVal] = React.useState("");
-  const dispatch = useDispatch();
   const { enqueueSnackbar } = useSnackbar();
   const queryClient = useQueryClient();
   const workspaceId = localStorage.getItem("workspaceId");
+  const dispatch = useDispatch();
 
   const handleChange = (e) => {
     e.stopPropagation();
@@ -567,44 +588,44 @@ const TaskNameTemplate = (props) => {
 
   return (
     <div key={mileStone_Id}>
-      {taskData?.isProject ? (
+      {childRecords?.length > 0 && isEmpty(parentItem) ? (
         <>
           <div
-            // onClick={() => dispatch(openMilestone(mileStone_Id))}
-            className=" px-[20px] cursor-pointer "
+            onClick={() => dispatch(openMilestone(mileStone_Id))}
+            className=" space-y-1 px-[20px] cursor-pointer "
           >
-            <div
-              className={`absolute right-1 px-3 py-1 rounded-l-xl items-center ${
-                taskData.completed === 100
-                  ? "text-[#01AD9F] bg-[#D9F2F0]"
-                  : "text-[#FF8484] bg-[#FFDBDB] "
-              } `}
-            >
-              {taskData.completed + "%"}
-            </div>
-            <div className=" font-medium ">
-              {" "}
-              <span>
-                <PixIcon fontSize="22px" />
-              </span>
-              &nbsp;
-              {name}
-            </div>
-            {/* <div className="flex items-center text-gray-400 ">
+            {taskData.name !== "Milestone 0" && (
+              <div
+                className={`absolute right-0 px-3 py-1 rounded-l-xl items-center ${
+                  taskData.completedPercentage === 100
+                    ? "text-[#01AD9F] bg-[#D9F2F0]"
+                    : "text-[#FF8484] bg-[#FFDBDB] "
+                } `}
+              >
+                {taskData.completedPercentage + "%"}
+              </div>
+            )}
+            {name === "Milestone 0" ? (
+              <div className=" font-medium ">Milestone (0)</div>
+            ) : (
+              <div className=" font-medium ">{`${name} (${taskData?.weightage}%) `}</div>
+            )}
+
+            <div className="flex items-center text-gray-400 ">
               <span>
                 <CalendarMonthIcon fontSize="22px" />
               </span>
               &nbsp; {startdate} - {enddate} ({taskData.duration.split(":")[0]}
               {Number(taskData.duration) < 2 ? "day" : "days"})
-            </div> */}
+            </div>
             <div
               onClick={handleChange}
-              className="flex w-max items-center text-gray-400 border-b-2 border-white border-dashed hover:border-gray-600 cursor-pointer  "
+              className="flex w-max items-center text-gray-400 hover:border-b-2 border-dashed border-gray-600 cursor-pointer  "
             >
               <span>
-                <TurnRightIcon fontSize="22px" />
+                <DescriptionIcon fontSize="22px" />
               </span>
-              &nbsp; {childRecords.length} Milestones
+              &nbsp; {childRecords.length} Open tasks
               {/* <span>
             <ArrowForwardIosIcon
               className={`${isOpenSubTasks && "rotate-90"}`}
@@ -613,19 +634,33 @@ const TaskNameTemplate = (props) => {
           </span> */}
             </div>
           </div>
+          <div className="mt-2 relative">
+            <span className="absolute top-1 px-6">
+              <AddIcon sx={{ fontSize: "22px", color: "#B1B5D0" }} />
+            </span>
+            <input
+              className="outline-none w-full border-t text-[12px] font-[500] border-gray-200 h-[35px] pl-[3rem]"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleSubmit();
+                }
+              }}
+              value={taskVal}
+              onChange={(e) => seTtaskVal(e.target.value)}
+              placeholder="Add a new Task ..."
+            />
+          </div>
         </>
-      ) : (
-        <div
-          onClick={() => dispatch(openMilestone(mileStone_Id))}
-          key={taskData.id}
-          className="relative px-3 cursor-pointer  "
-        >
+      ) : !isEmpty(parentItem) ? (
+        <div key={taskData.id} className=" px-3 cursor-pointer ">
           <div className="flex justify-between ">
-            <p className="text-[13px] font-medium text-[#9399AB]">
-              {taskData.name}
+            <p
+              onClick={() => dispatch(taskDrawyerOpen(taskData.id))}
+              className="font-bold"
+            >
+              {taskData.taskName}
             </p>
-
-            {/* <div className="flex space-x-2">
+            <div className="flex space-x-2">
               <div className=" text-sm flex space-x-2 items-center">
                 <div>
                   <AvatarGroup
@@ -698,19 +733,9 @@ const TaskNameTemplate = (props) => {
                   )}
                 </PopupState>
               </div>
-            </div> */}
+            </div>
           </div>
           <div
-            className={`absolute right-1 top-[-10px] px-3 py-1 rounded-l-xl items-center ${
-              taskData.completed === 100
-                ? "text-[#01AD9F] bg-[#D9F2F0]"
-                : "text-[#FF8484] bg-[#FFDBDB] "
-            } `}
-          >
-            {taskData.completed + "%"}
-          </div>
-
-          {/* <div
             onClick={() => dispatch(taskDrawyerOpen(taskData.id))}
             className="flex items-center justify-between space-x-1 "
           >
@@ -737,7 +762,45 @@ const TaskNameTemplate = (props) => {
             <div className=" text-[#B1B5D0] font-bold text-[11px]">
               In Progress
             </div>
-          </div> */}
+          </div>
+        </div>
+      ) : (
+        <div
+          onClick={() => dispatch(openMilestone(mileStone_Id))}
+          className=" space-y-1 px-[20px] cursor-pointer "
+        >
+          {taskData.name !== "Milestone 0" && (
+            <div
+              className={`absolute right-0 px-3 py-1 rounded-l-xl items-center ${
+                taskData.completedPercentage === 100
+                  ? "text-[#01AD9F] bg-[#D9F2F0]"
+                  : "text-[#FF8484] bg-[#FFDBDB] "
+              } `}
+            >
+              {taskData.completedPercentage + "%"}
+            </div>
+          )}
+          {name === "Milestone 0" ? (
+            <div className=" font-medium ">Milestone (0)</div>
+          ) : (
+            <div className=" font-medium ">{`${name} (${taskData?.weightage}%) `}</div>
+          )}
+          <div className="flex items-center text-gray-400 ">
+            <span>
+              <CalendarMonthIcon fontSize="22px" />
+            </span>
+            &nbsp; {startdate} - {enddate} ({taskData.duration.split(":")[0]}{" "}
+            {Number(taskData.duration) < 2 ? "day" : "days"})
+          </div>
+          <div
+            onClick={handleAddTask}
+            className="flex w-max items-center text-[#00AC9E] border-dashed border-gray-600 cursor-pointer  "
+          >
+            <span>
+              <DescriptionIcon fontSize="22px" />
+            </span>
+            &nbsp; Add a task...
+          </div>
         </div>
       )}
     </div>

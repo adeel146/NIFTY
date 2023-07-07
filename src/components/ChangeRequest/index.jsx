@@ -19,7 +19,11 @@ import { CircularProgress, List } from "@mui/material";
 import KeyboardBackspaceIcon from "@mui/icons-material/KeyboardBackspace";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { listTypeRequest, setHeaderMenuName } from "redux/actions";
+import {
+  listTypeRequest,
+  setHeaderMenuName,
+  setNewRequestType,
+} from "redux/actions";
 import { useDispatch } from "react-redux";
 import { useAuth } from "hooks/useAuth";
 import { setDateValuePersis } from "redux/actions";
@@ -89,12 +93,12 @@ function ChangeRequest() {
   const isResourceShow = watch("isResourceShow");
   const isCostShow = watch("isCostShow");
   const schedule = watch("schedule");
-
   const scheduleDate = new Date(schedule).getTime();
   const start = new Date(startDate).getTime();
   const end = new Date(endDate).getTime();
   const taskStart = new Date(task_startDate).getTime();
   const taskEnd = new Date(task_endDate).getTime();
+  const [updatedPayload, setUpdatedPayload] = useState();
 
   const compareDate = useSelector(
     (state) => state.projectTaskSlice.persisDateValue
@@ -112,36 +116,34 @@ function ChangeRequest() {
         const editSchedule = split(data?.data?.data?.schedule, "T")[0];
         reset(data?.data?.data);
         setValue("schedule", editSchedule);
-        setMileStoneList(data?.data?.data?.temporaryMilestones ?? []);
+        setMileStoneList(
+          data?.data?.data?.temporaryMilestones?.map((val) => {
+            return {
+              ...val,
+              id: val?.id.toString(),
+            };
+          }) ?? []
+        );
         setUpdateMileStoneList(data?.data?.data?.milestones ?? []);
         setTaskMilestoneList(data?.data?.data?.tasks ?? []);
         setDataListing(data?.data?.data);
-        console.log(data?.data?.data, "datadadfaafd");
+        console.log(data?.data?.data?.tasks, "data?.data?.data?.tasks");
+        if (data?.data?.data?.temporaryMilestones?.length > 0) {
+          setValue("isAddTask", true);
+        }
+        if (data?.data?.data?.milestones?.length > 0) {
+          setValue("isUpdateMileStone", true);
+        }
+        if (data?.data?.data?.tasks?.length > 0) {
+          setValue("isAddNewShow", true);
+        }
       },
     },
     {
-      enabled: !!requestId && !!checkType === "edit",
+      enabled: !!requestId && !!checkType == "edit",
     }
   );
 
-  // const addMilestone = () => {
-  //   const milestonesVals = {
-  //     id: uuidv4(),
-  //     name: name,
-  //     startDate: startDate,
-  //     endDate: endDate,
-  //   };
-  //   if ((start || end) > scheduleDate) {
-  //     enqueueSnackbar("Dates are above", { variant: "error" });
-  //   } else if (startDate == "" || endDate == "" || name == "") {
-  //     enqueueSnackbar("Add please", { variant: "error" });
-  //   } else {
-  //     setMileStoneList([...mileStoneList, milestonesVals]);
-  //     setValue("name", "");
-  //     setValue("startDate", "");
-  //     setValue("endDate", "");
-  //   }
-  // };
   const addMilestone = () => {
     if (start > scheduleDate) {
       enqueueSnackbar("Start Date Exceeded", { variant: "error" });
@@ -153,7 +155,7 @@ function ChangeRequest() {
       enqueueSnackbar("Enter All Fields", { variant: "error" });
     } else {
       const milestonesVals = {
-        id: uuidv4(),
+        id: uuidv4().toString(),
         name: name,
         startDate: startDate,
         endDate: endDate,
@@ -235,6 +237,15 @@ function ChangeRequest() {
   const updateStart = new Date(watchUpdateStart).getTime();
   const updateEnd = new Date(watchUpdateEnd).getTime();
 
+  const disableRequest = useSelector(
+    (state) => state?.projectTaskSlice?.newRequestType
+  );
+  const moduleInfo = useSelector(
+    (state) => state?.projectTaskSlice?.moduleInformation
+  );
+
+  console.log(moduleInfo, "moduleInfo");
+
   useEffect(() => {
     if (mileStoneIdMatch) {
       setValue("update_startDate", updateStartDate);
@@ -274,15 +285,10 @@ function ChangeRequest() {
     };
   });
 
-  console.log(impactMilstone, "impactMilstone");
-
   const chooseAllMilestone = [
     ...(impactMilstone ?? []),
     ...(milestoneDropDown ?? []),
   ];
-  console.log({ milestoneDropDown, impactMilstone }, "impactMilstone2");
-
-  console.log(chooseAllMilestone, "chooseAllMilestone");
 
   function isDateExceeded(dateToCheck, startDate, endDate) {
     // Create Date objects from the input values
@@ -342,7 +348,6 @@ function ChangeRequest() {
     [task_milstone_id]
   );
 
-  console.log(idExist, "idExist");
   useEffect(() => {
     if (idExist) {
       setValue("isMilestoneTemporary", true);
@@ -351,15 +356,33 @@ function ChangeRequest() {
     }
   }, [idExist]);
 
+  console.log(taskMilestoneList, "taskMilestoneList");
+
+  // useEffect(() => {
+  //   setUpdatedPayload(
+  //     taskMilestoneList?.map((val) => {
+  //       return {
+  //         ...val,
+  //         task_milstone_id: val?.task_milstone_id?.value,
+  //         users: val?.users?.map((item) => {
+  //           return item?.value;
+  //         }),
+  //       };
+  //     })
+  //   );
+  // }, [taskMilestoneList]);
+
   const updatedTaskPayload = taskMilestoneList?.map((val) => {
     return {
       ...val,
-      task_milstone_id: val?.task_milstone_id?.value,
+      task_milstone_id: val?.task_milstone_id?.value || val?.task_milstone_id,
       users: val?.users?.map((item) => {
-        return item?.value;
+        return item?.id || item?.value;
       }),
     };
   });
+
+  console.log(updatedPayload, "updatedPayload");
 
   console.log(taskMilestoneList, "taskMilestoneList");
 
@@ -392,16 +415,32 @@ function ChangeRequest() {
       enqueueSnackbar(data.response.data.message, { variant: "error" });
     },
   });
+  const { mutate: changeRequest, isLoading: acceptLoading } = useMutation({
+    mutationKey: ["change_request_actions"],
+    mutationFn: (data) => axios.post(`/change_request/action`, data),
+    onSuccess: (data) => {
+      if (data?.data?.success) {
+        enqueueSnackbar(data.data.message, { variant: "success" });
+        queryClient.invalidateQueries(["get_notification"]);
+      }
+    },
+    onError: (data) => {
+      enqueueSnackbar(data.response.data.message, { variant: "error" });
+    },
+  });
+
+  console.log(requestId, "requestId");
 
   const { mutate: updateRequest, isLoading: updateLoading } = useMutation({
-    mutationKey: ["update_change_request"],
+    mutationKey: ["update_change_request", requestId],
     mutationFn: (data) => axios.put(`/change_request/${requestId}`, data),
     onSuccess: (data) => {
       if (data?.data?.success) {
         enqueueSnackbar(data?.data?.message, { variant: "success" });
         queryClient.invalidateQueries(["get_request_list"]);
-        dispatch(listTypeRequest("add"));
         navigate(-1);
+        dispatch(listTypeRequest("add"));
+        dispatch(setHeaderMenuName("Change Request"));
       }
     },
     onError: (data) => {
@@ -411,7 +450,7 @@ function ChangeRequest() {
 
   const onSubmit = (data) => {
     const payload = {
-      project_Id: projectId,
+      project_Id: +projectId,
       description: data.description,
       justification: data.justification,
       benefits: data.benefits,
@@ -556,6 +595,7 @@ function ChangeRequest() {
           navigate(-1);
           dispatch(listTypeRequest("add"));
           dispatch(setHeaderMenuName("Change Request"));
+          dispatch(setNewRequestType(""));
         }}
       >
         <KeyboardBackspaceIcon />
@@ -640,6 +680,7 @@ function ChangeRequest() {
                       name="description"
                       errors={errors}
                       control={control}
+                      disabled={disableRequest == "review"}
                       labelText="Change Description"
                       placeholder="Enter Description"
                     />
@@ -651,6 +692,7 @@ function ChangeRequest() {
                     <HookFreeSelect
                       name="priority"
                       errors={errors}
+                      disabled={disableRequest == "review"}
                       control={control}
                       required={false}
                       options={periorityList}
@@ -663,6 +705,7 @@ function ChangeRequest() {
                       name="justification"
                       errors={errors}
                       control={control}
+                      disabled={disableRequest == "review"}
                       labelText="Change Justification"
                       placeholder="Enter Justification"
                     />
@@ -674,6 +717,7 @@ function ChangeRequest() {
                       name="benefits"
                       errors={errors}
                       control={control}
+                      disabled={disableRequest == "review"}
                       labelText="Benefits"
                       placeholder="Enter Benefits"
                     />
@@ -685,6 +729,7 @@ function ChangeRequest() {
                       name="proposedAction"
                       errors={errors}
                       control={control}
+                      disabled={disableRequest == "review"}
                       labelText="Enter Proposed Actions"
                       placeholder="Proposed Actions"
                     />
@@ -696,6 +741,7 @@ function ChangeRequest() {
                       name="risk"
                       errors={errors}
                       control={control}
+                      disabled={disableRequest == "review"}
                       labelText="Enter Risk"
                       placeholder="Enter Risks"
                     />
@@ -726,6 +772,7 @@ function ChangeRequest() {
                       <div className="w-full">
                         <HookTextField
                           name="scope"
+                          disabled={disableRequest == "review"}
                           errors={errors}
                           control={control}
                           width="400px"
@@ -751,6 +798,7 @@ function ChangeRequest() {
                         <HookTextField
                           name="cost"
                           errors={errors}
+                          disabled={disableRequest == "review"}
                           type="textarea"
                           width="400px"
                           control={control}
@@ -775,6 +823,7 @@ function ChangeRequest() {
                         <HookTextField
                           name="quality"
                           errors={errors}
+                          disabled={disableRequest == "review"}
                           control={control}
                           type="textarea"
                           placeholder="Enter Quality"
@@ -799,6 +848,7 @@ function ChangeRequest() {
                           name="resources"
                           errors={errors}
                           control={control}
+                          disabled={disableRequest == "review"}
                           width="400px"
                           type="textarea"
                           placeholder="Enter Resources"
@@ -814,6 +864,7 @@ function ChangeRequest() {
                         name="schedule"
                         errors={errors}
                         control={control}
+                        disabled={disableRequest == "review"}
                         placeholder=""
                         type="date"
                         width="300px"
@@ -844,6 +895,7 @@ function ChangeRequest() {
                               <HookTextField
                                 name="name"
                                 errors={errors}
+                                disabled={disableRequest == "review"}
                                 control={control}
                                 placeholder="Enter Name"
                               />
@@ -855,6 +907,7 @@ function ChangeRequest() {
                               <HookTextField
                                 name="startDate"
                                 errors={errors}
+                                disabled={disableRequest == "review"}
                                 control={control}
                                 type="date"
                               />
@@ -866,19 +919,23 @@ function ChangeRequest() {
                               <HookTextField
                                 name="endDate"
                                 errors={errors}
+                                disabled={disableRequest == "review"}
                                 control={control}
                                 type="date"
                               />
                             </div>
-                            <div className="relative top-[5px]">
-                              <div
-                                onClick={addMilestone}
-                                className="w-[120px] h-[40px] px-[14px] py-[8px] font-Manrope font-semibold text-sm bg-[#00A99B] rounded-md text-white flex items-center justify-center"
-                                role="button"
-                              >
-                                Add
+                            {!disableRequest && (
+                              <div className="relative top-[5px]">
+                                <div
+                                  onClick={addMilestone}
+                                  disabled={disableRequest == "review"}
+                                  className="w-[120px] h-[40px] px-[14px] py-[8px] font-Manrope font-semibold text-sm bg-[#00A99B] rounded-md text-white flex items-center justify-center"
+                                  role="button"
+                                >
+                                  Add
+                                </div>
                               </div>
-                            </div>
+                            )}
                           </div>
                           {/* /// table /// */}
                           <div className="overflow-auto lg:overflow-visible my-5">
@@ -894,15 +951,17 @@ function ChangeRequest() {
                                   <th className="p-3 text-[#2f2f2f] font-semibold">
                                     End Date
                                   </th>
-                                  <th className="p-3 text-[#2f2f2f] font-semibold">
-                                    Actions
-                                  </th>
+                                  {!disableRequest && (
+                                    <th className="p-3 text-[#2f2f2f] font-semibold">
+                                      Actions
+                                    </th>
+                                  )}
                                 </tr>
                               </thead>
                               <tbody className="">
                                 {mileStoneList?.map((val, index) => {
                                   return (
-                                    <tr className="bg-gray-100">
+                                    <tr className="bg-gray-100" key={val?.id}>
                                       <td className="p-3">
                                         <div className="text-[#2f2f2f]">
                                           {val?.name}
@@ -918,16 +977,18 @@ function ChangeRequest() {
                                           {val?.endDate}
                                         </div>
                                       </td>
-                                      <td className="p-3">
-                                        <div
-                                          className="text-[#f00] cursor-pointer "
-                                          onClick={() =>
-                                            deleteMilestone(val?.id)
-                                          }
-                                        >
-                                          <DeleteIcon />
-                                        </div>
-                                      </td>
+                                      {!disableRequest && (
+                                        <td className="p-3">
+                                          <div
+                                            className="text-[#f00] cursor-pointer "
+                                            onClick={() =>
+                                              deleteMilestone(val?.id)
+                                            }
+                                          >
+                                            <DeleteIcon />
+                                          </div>
+                                        </td>
+                                      )}
                                     </tr>
                                   );
                                 })}
@@ -958,6 +1019,7 @@ function ChangeRequest() {
                                 name="milstone_id"
                                 errors={errors}
                                 control={control}
+                                disabled={disableRequest == "review"}
                                 required={false}
                                 options={milestoneDropDown}
                               />
@@ -969,6 +1031,7 @@ function ChangeRequest() {
                               <HookTextField
                                 name="update_startDate"
                                 errors={errors}
+                                disabled={disableRequest == "review"}
                                 control={control}
                                 type="date"
                               />
@@ -980,19 +1043,24 @@ function ChangeRequest() {
                               <HookTextField
                                 name="update_endDate"
                                 errors={errors}
+                                disabled={disableRequest == "review"}
                                 control={control}
                                 type="date"
                               />
                             </div>
                             <div className="relative top-[13px]">
                               <div className="flex space-x-2 items-center">
-                                <div
-                                  onClick={updateSecondMilestone}
-                                  className="w-[120px] h-[40px] px-[14px] py-[8px] font-Manrope font-semibold text-sm bg-[#00A99B] rounded-md text-white flex items-center justify-center"
-                                  role="button"
-                                >
-                                  Add
-                                </div>
+                                {!disableRequest && (
+                                  <div
+                                    onClick={updateSecondMilestone}
+                                    className="w-[120px] h-[40px] px-[14px] py-[8px] font-Manrope font-semibold text-sm bg-[#00A99B] rounded-md text-white flex items-center justify-center"
+                                    role="button"
+                                    disabled={disableRequest == "review"}
+                                  >
+                                    Add
+                                  </div>
+                                )}
+
                                 {showEdit && (
                                   <div
                                     onClick={updateUnique}
@@ -1019,23 +1087,20 @@ function ChangeRequest() {
                                   <th className="p-3 text-[#2f2f2f] font-semibold">
                                     End Date
                                   </th>
-
-                                  <th className="p-3 text-[#2f2f2f] font-semibold">
-                                    Actions
-                                  </th>
+                                  {!disableRequest && (
+                                    <th className="p-3 text-[#2f2f2f] font-semibold">
+                                      Actions
+                                    </th>
+                                  )}
                                 </tr>
                               </thead>
                               <tbody>
                                 {updateMileStoneList?.map((val, index) => {
-                                  console.log(val, "vallll");
                                   const name = milestoneDropDown?.find(
                                     (list) => {
                                       return val?.milstone_id == list?.value;
                                     }
                                   );
-
-                                  console.log(name, "nameee");
-
                                   return (
                                     <tr className="bg-gray-100" key={index}>
                                       <td className="p-3">
@@ -1053,28 +1118,29 @@ function ChangeRequest() {
                                           {val?.update_endDate}
                                         </div>
                                       </td>
-
-                                      <td className="p-3">
-                                        <div className="flex gap-3">
-                                          <div
-                                            className="text-[#888] cursor-pointer"
-                                            onClick={() => {
-                                              setSelectedItem({ index, val });
-                                              setShowEdit(true);
-                                            }}
-                                          >
-                                            <EditIcon />
+                                      {!disableRequest && (
+                                        <td className="p-3">
+                                          <div className="flex gap-3">
+                                            <div
+                                              className="text-[#888] cursor-pointer"
+                                              onClick={() => {
+                                                setSelectedItem({ index, val });
+                                                setShowEdit(true);
+                                              }}
+                                            >
+                                              <EditIcon />
+                                            </div>
+                                            <div
+                                              className="text-[#f00] cursor-pointer "
+                                              onClick={() =>
+                                                deleteMilestoneSecond(index)
+                                              }
+                                            >
+                                              <DeleteIcon />
+                                            </div>
                                           </div>
-                                          <div
-                                            className="text-[#f00] cursor-pointer "
-                                            onClick={() =>
-                                              deleteMilestoneSecond(index)
-                                            }
-                                          >
-                                            <DeleteIcon />
-                                          </div>
-                                        </div>
-                                      </td>
+                                        </td>
+                                      )}
                                     </tr>
                                   );
                                 })}
@@ -1106,6 +1172,7 @@ function ChangeRequest() {
                                 <HookSelectField
                                   name="task_milstone_id"
                                   errors={errors}
+                                  isDisabled={disableRequest == "review"}
                                   control={control}
                                   required={false}
                                   loadOptions={chooseAllMilestone}
@@ -1118,6 +1185,7 @@ function ChangeRequest() {
                                   <HookTextField
                                     name="task_name"
                                     errors={errors}
+                                    disabled={disableRequest == "review"}
                                     control={control}
                                     placeholder="Enter Name"
                                     labelText="Name"
@@ -1130,6 +1198,7 @@ function ChangeRequest() {
                                   <HookTextField
                                     name="task_startDate"
                                     errors={errors}
+                                    disabled={disableRequest == "review"}
                                     control={control}
                                     type="date"
                                   />
@@ -1141,6 +1210,7 @@ function ChangeRequest() {
                                   <HookTextField
                                     name="task_endDate"
                                     errors={errors}
+                                    disabled={disableRequest == "review"}
                                     control={control}
                                     type="date"
                                   />
@@ -1151,6 +1221,7 @@ function ChangeRequest() {
                                     errors={errors}
                                     control={control}
                                     required={false}
+                                    disabled={disableRequest == "review"}
                                     // placeholder="Search by name or enter email to invite ..."
                                     loadOptions={workspaceAllUsers}
                                     isMulti={true}
@@ -1167,6 +1238,7 @@ function ChangeRequest() {
                                     </div>
                                     {showTaskEdit && (
                                       <div
+                                        disabled={disableRequest == "review"}
                                         onClick={updateTaskUpdate}
                                         className="w-[120px] h-[40px] px-[14px] py-[8px] font-Manrope font-semibold text-sm bg-[#00A99B] rounded-md text-white flex items-center justify-center"
                                         role="button"
@@ -1195,9 +1267,11 @@ function ChangeRequest() {
                                     <th className="p-3 text-[#2f2f2f] font-semibold">
                                       Assign to
                                     </th>
-                                    <th className="p-3 text-[#2f2f2f] font-semibold">
-                                      Actions
-                                    </th>
+                                    {!disableRequest && (
+                                      <th className="p-3 text-[#2f2f2f] font-semibold">
+                                        Actions
+                                      </th>
+                                    )}
                                   </tr>
                                 </thead>
                                 <tbody>
@@ -1223,30 +1297,39 @@ function ChangeRequest() {
                                         <td className="p-3">
                                           <div className="text-[#2f2f2f]">
                                             {val?.users?.map((user) => {
-                                              return <div>{user?.email}</div>;
+                                              return (
+                                                <div>
+                                                  {user?.label || user?.email}
+                                                </div>
+                                              );
                                             })}
                                             {/* {userShow} */}
                                           </div>
                                         </td>
-                                        <td className="p-3 ">
-                                          <div className="flex gap-3">
-                                            <div
-                                              className="text-[#888] cursor-pointer"
-                                              onClick={() => {
-                                                setShowTaskEdit(true);
-                                                setTaskSelected({ index, val });
-                                              }}
-                                            >
-                                              <EditIcon />
+                                        {!disableRequest && (
+                                          <td className="p-3 ">
+                                            <div className="flex gap-3">
+                                              <div
+                                                className="text-[#888] cursor-pointer"
+                                                onClick={() => {
+                                                  setShowTaskEdit(true);
+                                                  setTaskSelected({
+                                                    index,
+                                                    val,
+                                                  });
+                                                }}
+                                              >
+                                                <EditIcon />
+                                              </div>
+                                              <div
+                                                className="text-[#f00] cursor-pointer"
+                                                onClick={() => delTasks(index)}
+                                              >
+                                                <DeleteIcon />
+                                              </div>
                                             </div>
-                                            <div
-                                              className="text-[#f00] cursor-pointer"
-                                              onClick={() => delTasks(index)}
-                                            >
-                                              <DeleteIcon />
-                                            </div>
-                                          </div>
-                                        </td>
+                                          </td>
+                                        )}
                                       </tr>
                                     );
                                   })}
@@ -1261,22 +1344,43 @@ function ChangeRequest() {
                 )}
 
                 {/* end new Tasks // */}
-                <div className="relative mb-5 flex w-full justify-end">
-                  <div
-                    className="w-[150px] h-[40px] px-[14px] py-[8px] font-Manrope font-semibold text-[16px] bg-[#00A99B] rounded-md text-white flex items-center justify-center"
-                    role="button"
-                    type="submit"
-                    onClick={handleSubmit(onSubmit)}
-                  >
-                    {requestLoding || updateLoading ? (
-                      <CircularProgress />
-                    ) : checkType == "edit" ? (
-                      "Edit"
-                    ) : (
-                      "Sumbit"
-                    )}
+                {disableRequest == "review" ? (
+                  <div className="flex mt-8 justify-end w-full">
+                    <div
+                      class=" h-[34px] px-[16px] py-[5px] mr-5 font-Manrope font-semibold text-[14px] bg-[#00A99B] rounded-md text-white flex items-center justify-center"
+                      role="button"
+                      type="submit"
+                      onClick={() => changeRequest(moduleInfo)}
+                    >
+                      Accept
+                      {acceptLoading && <CircularProgress size={20} />}
+                    </div>
+                    <div
+                      class=" h-[34px] px-[16px] py-[5px] font-Manrope font-semibold text-[14px] bg-[#FF614B] rounded-md text-white flex items-center justify-center"
+                      role="button"
+                      type="submit"
+                    >
+                      Reject
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="relative mb-5 flex w-full justify-end">
+                    <button
+                      className="w-[150px] h-[40px] px-[14px] py-[8px] font-Manrope font-semibold text-[16px] bg-[#00A99B] rounded-md text-white flex items-center justify-center"
+                      role="button"
+                      type="submit"
+                      onClick={handleSubmit(onSubmit)}
+                    >
+                      {requestLoding || updateLoading ? (
+                        <CircularProgress size={25} />
+                      ) : checkType == "edit" ? (
+                        "Edit"
+                      ) : (
+                        "Sumbit"
+                      )}
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>

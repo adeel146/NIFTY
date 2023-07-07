@@ -27,11 +27,13 @@ const HookTextField = ({
                   required
                     ? "block font-semibold heading-color text-base  after:content-['*'] after:ml-0.5 after:text-red-500"
                     : "block font-semibold heading-color text-base"
-                }></span>
+                }
+              ></span>
 
               {labelText && (
                 <label
-                  className={`font-semibold text-[15px] mb-1 font-Manrope  ${labelClass}`}>
+                  className={`font-semibold text-[15px] mb-1 font-Manrope  ${labelClass}`}
+                >
                   {labelText}
                 </label>
               )}
@@ -49,7 +51,7 @@ const HookTextField = ({
                   {...rest}
                   type={type}
                   placeholder={placeholder}
-                  className=" border mt-1 block focus:outline-[#00a99b] active:shadow-inner global-inputFiled rounded h-[45px]  border-gray-300 w-full px-3 py-2 bg-white text-black  placeholder:text-[14px] placeholder:font-Manrope placeholder:font-semibold shadow-inner placeholder:text-[#8e8e8e] "
+                  className=" border mt-1 block focus:outline-[#00a99b] active:shadow-inner global-inputFiled rounded h-[45px]  border-gray-300 w-full px-3 py-2 bg-white text-black  placeholder:text-[14px] placeholder:font-Manrope shadow-inner placeholder:text-[#8e8e8e] "
                 />
               )}
             </label>

@@ -12,13 +12,14 @@ import { capitalizeFirstLetter } from "utils";
 import { useSelector } from "react-redux";
 import CalendarArea from "components/KanBan/CalendarArea";
 import FileManager from "components/FileManager/FileManager";
+import MyInbox from "components/Main/homeDashboard/dashboard/widgetsCards/MyInbox";
 
 function MyWork() {
   const [isEditColumn, setIsEditColumn] = useState(false);
   const [isProjectSelect, setIsProjectSelect] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedList, setSelectedList] = useState("list");
-  const [name, setName] = useState("Tasks");
+  const [name, setName] = useState("My Inbox");
 
   const handleButtonClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -36,6 +37,10 @@ function MyWork() {
     setIsEditColumn(false);
   };
   const mainNavigation = [
+    {
+      name: "My Inbox",
+      component: <MyInbox />,
+    },
     {
       name: "Tasks",
       component: (

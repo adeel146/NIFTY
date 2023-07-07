@@ -173,10 +173,9 @@ function ActionItem(props) {
         <Checkbox
           className="!p-0 !py-1"
           sx={{
-            color: "#6477F8",
-            borderColor: "#6477F8",
+            color: data?.isTask ? "#DAD5DD" : "#6477F8",
             "&.Mui-checked": {
-              color: "#6477F8",
+              color: data?.isTask ? "#DAD5DD" : "#6477F8",
             },
           }}
           checked={data.completed}
@@ -185,7 +184,7 @@ function ActionItem(props) {
         <Tooltip title={data?.isTask && "Moved to Task"} arrow>
           <input
             className={`text-[gray] !w-[80%] h-full pr-5 ${
-              data?.isTask && "line-through"
+              data?.isTask && "text-gray-300"
             }  `}
             value={data.name}
             onChange={handleInputChange}
@@ -314,7 +313,9 @@ function ActionItem(props) {
                     <ListItemIcon>
                       <ContentCut fontSize="small" />
                     </ListItemIcon>
-                    <ListItemText>Convert to Task</ListItemText>
+                    <ListItemText>
+                      {data?.isTask ? "Remove from Task" : "Convert to Task"}
+                    </ListItemText>
                     <Typography variant="body2" color="text.secondary">
                       ⌘X
                     </Typography>

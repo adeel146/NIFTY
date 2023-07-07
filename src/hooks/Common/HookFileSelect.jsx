@@ -7,7 +7,7 @@ import FileSizeInMb from "./FileSizeInMb";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid";
-import AddIcon from '@mui/icons-material/Add';
+import AddIcon from "@mui/icons-material/Add";
 const HookSelectFileInput = ({
   allowMulti = false,
   label,
@@ -16,9 +16,9 @@ const HookSelectFileInput = ({
   errors,
   disabled = false,
   defaultValue = [],
-  ref=null,
+  ref = null,
 }) => {
-  console.log("refer", ref)
+  console.log("refer", ref);
   return (
     <Controller
       name={name}
@@ -99,7 +99,7 @@ const SelectFileInput = ({
     <>
       {label && <p className="text-15 mb-5">{label}</p>}
       <div
-        className={` flex ml-2 justify-center items-center  w-[100px] border-dashed border border-[#00A99B]  bg-[#F2F8FA] cursor-pointer  min-h-[90px] rounded-md ${
+        className={` flex justify-center items-center  w-[90px] border-dashed border border-[#00A99B]  bg-[#F2F8FA] cursor-pointer  min-h-[90px] rounded-md ${
           isDragActive && "border-black"
         } `}
         {...getRootProps()}
@@ -114,7 +114,7 @@ const SelectFileInput = ({
         {Boolean(get(errors, name)) && (
           <p className="text-11 text-red mt-3">{get(errors, name)?.message}</p>
         )}
-        <input {...getInputProps()} ref={ref}/>
+        <input {...getInputProps()} ref={ref} />
       </div>
       {!!selectedFiles?.length && allowMulti && (
         <div className="mt-2 mx-[10px]">

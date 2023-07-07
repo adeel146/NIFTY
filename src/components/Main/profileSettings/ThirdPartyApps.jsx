@@ -19,7 +19,8 @@ function ThirdPartyApps() {
                   Ready to build? See
                   <a
                     href="#"
-                    className="font-Manrope text-[#00ac9e] text-[15px] ml-[6px] font-bold">
+                    className="font-Manrope text-[#00ac9e] text-[15px] ml-[6px] font-bold"
+                  >
                     API Documentation
                   </a>
                 </p>
@@ -27,7 +28,8 @@ function ThirdPartyApps() {
 
               <div
                 className="pt-3 cursor-pointer"
-                onClick={() => setSectionShow(false)}>
+                onClick={() => setSectionShow(false)}
+              >
                 <CloseIcon
                   sx={{
                     color: "#02bebd",
@@ -43,7 +45,8 @@ function ThirdPartyApps() {
                 Have more questions?
                 <a
                   href="#"
-                  className="font-Manrope text-[#00ac9e] ml-[6px] text-[15px] font-semibold">
+                  className="font-Manrope text-[#00ac9e] ml-[6px] text-[15px] font-semibold"
+                >
                   Ask us
                   <span className="ml-[3px]">✌️</span>
                 </a>
@@ -52,7 +55,7 @@ function ThirdPartyApps() {
           </div>
         )}
 
-        <div className="px-12 mt-7 cursor-pointer">
+        <div className="px-10 mt-7 cursor-pointer">
           <div className="flex flex-wrap">
             <div className="box-1">
               <div className="rounded-lg flex flex-col p-4 max-w-[300px] min-w-[280px] border border-[#00b8a9] m-1">
@@ -60,17 +63,17 @@ function ThirdPartyApps() {
                   <div className="text-[40px] mr-3 text-center mb-4 w-9">
                     <img className="" src="/images/only nifty logo.svg" />
                   </div>
-                  <div className="mb-4 flex-[0_0_auto] mt-2">
+                  <div className="mb-4 flex-[0_0_auto]">
                     <div className="font-semibold font-Manrope text-base">
                       Create a new App
                     </div>
                   </div>
                 </div>
-                <div className="mb-5 flex-auto font-Manrope">
+                <div className="text-[#9399AB] text-[14px] mb-2">
                   Create a new app to integrate with three60...
                 </div>
                 <div className="flex-[0_0_auto]">
-                  <button className="min-w-full px-0 bg-[#00A99B] hover:bg-[#02bdad] hover:shadow-lg text-white font-semibold font-Manrope shadow-md text-base rounded-md h-10">
+                  <button className="min-w-full px-0 bg-[#00A99B] hover:bg-[#02bdad] hover:shadow-lg text-white font-semibold font-Manrope shadow-md text-[14px] rounded-md h-10">
                     Create a new App
                   </button>
                 </div>

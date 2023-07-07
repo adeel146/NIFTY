@@ -23,7 +23,7 @@ import LinkIcon from "@mui/icons-material/Link";
 import AlternateEmailIcon from "@mui/icons-material/AlternateEmail";
 import SyncfusionGanttChart from "routes/roadMap";
 import Projects from "components/Projects";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import TaskCardView from "./widgetsCards/taskwidget/TaskCardView";
 import CalendarArea from "components/KanBan/CalendarArea";
 import { map } from "lodash";
@@ -59,6 +59,7 @@ import { openMatrixDialog } from "redux/actions";
 import ChangeRequest from "components/ChangeRequest";
 import ChangeRequestListing from "components/ChangeRequest/ChangeRequestListing";
 import { useAppGetProject, useGetProjectMembers } from "hooks/ProjectTask.jsx";
+import ProjectInfo from "./widgetsCards/ProjectInfo";
 
 const widgetsList = [
   {
@@ -104,6 +105,7 @@ const HomeMain = () => {
     (state) => state?.projectTaskSlice?.headerMenuName
   );
   let { projectId } = useParams();
+  const navigate = useNavigate();
   const [name, setName] = useState(headerMenuName);
   const [anchorEl, setAnchorEl] = useState(null);
   const [showList, setShowList] = useState(map(widgetsList, "name"));
@@ -219,6 +221,11 @@ const HomeMain = () => {
       name: "Dashboard",
       Component: <TestComponent />,
     },
+    {
+      name: "Project Info",
+      Component: <ProjectInfo />,
+    },
+
     {
       name: "Milestone",
       Component: <SyncfusionGanttChart />,
@@ -359,7 +366,8 @@ const HomeMain = () => {
           {activeProject?.name?.charAt(0)?.toUpperCase() ?? ""}
         </div>
         <div className="absolute left-[80px] top-1 flex space-x-5 text-[#2f2f2f] font-bold text-[18px] capitalize">
-          {activeProject?.name ?? ""} <ExpandMoreIcon />
+          {activeProject?.name ?? ""}
+          {/* <ExpandMoreIcon /> */}
         </div>
       </div>
       <div className="bg-white flex justify-between items-center pr-8 pl-[80px] border border-b-[#e8e8e8]">
@@ -477,9 +485,9 @@ const HomeMain = () => {
                   </div>
                 </button>
               </>
-            ) : (
+            ) : name === "Dashboard" ? (
               <>
-                <button className="flex space-x-3 items-center justify-center text-[#2f2f2f] hover:!text-[#009084] font-semibold text-[13px] font-Manrope rounded-md bg-whit shadow-xs px-4 h-[34px] border border-gray-200">
+                {/* <button className="flex space-x-3 items-center justify-center text-[#2f2f2f] hover:!text-[#009084] font-semibold text-[13px] font-Manrope rounded-md bg-whit shadow-xs px-4 h-[34px] border border-gray-200">
                   <div className="relative mr-2">
                     <svg
                       className="icon"
@@ -516,14 +524,14 @@ const HomeMain = () => {
                     </svg>
                   </div>{" "}
                   Automate
-                </button>
+                </button> */}
                 <button
                   onClick={handleClick}
                   className="flex space-x-3 items-center justify-center text-[#2f2f2f] hover:!text-[#009084] font-semibold text-[13px] font-Manrope rounded-md bg-whit shadow-xs px-4 h-[34px] border border-gray-200"
                 >
                   <div className="relative mr-2">
                     <svg
-                      classname="icon"
+                      className="icon"
                       width="11px"
                       height="11px"
                       viewBox="0 0 12 12"
@@ -531,8 +539,8 @@ const HomeMain = () => {
                       xmlns="http://www.w3.org/2000/svg"
                     >
                       <path
-                        fill-rule="evenodd"
-                        clip-rule="evenodd"
+                        fillRule="evenodd"
+                        clipRule="evenodd"
                         d="M6.66667 0.666569C6.66667 0.296631 6.36819 0 6 0C5.62924 0 5.33333 0.298433 5.33333 0.666569V5.33333H0.666569C0.296631 5.33333 0 5.63181 0 6C0 6.37076 0.298433 6.66667 0.666569 6.66667H5.33333V11.3334C5.33333 11.7034 5.63181 12 6 12C6.37076 12 6.66667 11.7016 6.66667 11.3334V6.66667H11.3334C11.7034 6.66667 12 6.36819 12 6C12 5.62924 11.7016 5.33333 11.3334 5.33333H6.66667V0.666569Z"
                         fill="currentColor"
                       ></path>
@@ -541,13 +549,19 @@ const HomeMain = () => {
                   Add Widgets
                 </button>
               </>
-            )}
-
-            <button className="flex items-center justify-center  rounded-md bg-whit shadow-xs w-[34px] h-[34px] border border-gray-200 hover:!text-[#009084]">
-              <div>
-                <StarBorderIcon />
+            ): name === "Change Request" ? (
+              <div
+                className=" "
+                onClick={() => navigate(`/dashboard/add-request/${projectId}`)}
+              >
+                <GreenButton
+                  style={{ width: "120px" }}
+                  buttonText="Add Request"
+                />
               </div>
-            </button>
+            ) : (
+              ""
+            )}
           </div>
         </div>
       </div>
@@ -705,6 +719,22 @@ const HomeMain = () => {
               })}
             </div>
           </Popover>
+        </div>
+      ): name === "Project Info" ? (
+        <div className="flex justify-between items-start">
+          {showList.includes("Members") && (
+            <div className="ml-[24px] mt-[2.5rem] mb-[2.5rem] w-[100%]">
+              <ProjectInfo
+                membersList={membersList}
+                activeProject={activeProject}
+              />
+            </div>
+          )}
+          {/* {showList.includes("Activity") && (
+              <div className="mr-[24px] ">
+                <Activity />
+              </div>
+            )} */}
         </div>
       ) : null}
       <CreateFolderDialog id={getFolderId ? getFolderId : parentId} />

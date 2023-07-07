@@ -14,6 +14,7 @@ function HookSelectField({
   required = false,
   isMulti,
   loading,
+  isDisabled,
 }) {
   return (
     <div>
@@ -28,11 +29,13 @@ function HookSelectField({
                   required
                     ? "block font-medium  mb-1  after:content-['*'] after:ml-0.5 after:text-red-500"
                     : "block font-medium  mb-1"
-                }>
+                }
+              >
                 {labelText}
               </span>
 
               <Select
+                isDisabled={isDisabled}
                 isMulti={isMulti}
                 isLoading={loading}
                 {...field}

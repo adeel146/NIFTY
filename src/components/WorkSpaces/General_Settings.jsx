@@ -86,7 +86,7 @@ const General_Settings = () => {
     id: workspaceId,
     onSuccess: onWeekendsUpdated,
   });
-  const updateLogo = useUpdateLogo({workspaceId, onSuccess: onLogoUpdated });
+  const updateLogo = useUpdateLogo({ workspaceId, onSuccess: onLogoUpdated });
   const updateName = useUpdateName({
     id: workspaceId,
     onSuccess: onNameUpdated,
@@ -151,12 +151,19 @@ const General_Settings = () => {
           <h1 class="font-bold text-xl text-[#373737]">
             Graffitects: General Settings
           </h1>
-          <CloseIcon />
+          <CloseIcon
+            sx={{
+              fontSize: "35px",
+              color: "#373737",
+              cursor: "pointer",
+              "&:hover": { color: "#f98c42" },
+            }}
+          />
           {/* <div class="border border-red-500 ">Close icon </div> */}
         </div>
         <hr></hr>
         <div className="px-11 mt-4 mb-7 flex flex-col">
-          <span class="text-[#2f2f2f] font-medium text-base">
+          <span class="text-[15px] mb-3 font-Manrope  text-[#373737] text-base font-semibold">
             Workspace Logo
           </span>
           <form id="avatar_profile">
@@ -193,10 +200,10 @@ const General_Settings = () => {
             </div>
           </form>
 
-          <div className="mt-3 w-[40%] flex items-center  space-x-3">
+          <div className="mt-3 w-[40%] flex items-center space-x-3">
             {/* <div className="bg-[#f7f7f7] border border-[#ececec] flex rounded-md mt-2"> */}
             <HookTextField
-              labelClass="text-[#373737] text-base font-medium "
+              labelClass="text-[#9399AB] text-[14px] font-medium "
               control={control}
               errors={errors}
               labelText="Workspace Name"
@@ -206,7 +213,7 @@ const General_Settings = () => {
               className="bg-[#f7f7f7] border border-[#ececec] flex rounded-md mt-2"
             />
             <span
-              class="!border-left-0 text-gray-800 mt-2 bg-[#f7f7f7] font-semibold  global-inputFiled text-[12px] px-3 items-center h-[45px] py-2 !border-gray-300 cursor-pointer flex justify-center uppercase "
+              class="!border-left-0 text-[#fff] mt-[6px] bg-[#9399AB] font-semibold global-inputFiled text-[13px] px-5 items-center h-[45px] py-2 !border-gray-300 cursor-pointer flex justify-center uppercase"
               onClick={() => handleEditClick("name")}
             >
               Edit
@@ -216,7 +223,7 @@ const General_Settings = () => {
           <div className="mt-3 w-[40%] flex items-center  space-x-3">
             {/* <div className="bg-[#f7f7f7] border border-[#ececec] flex rounded-md mt-2"> */}
             <HookTextField
-              labelClass="text-[#373737] text-base font-medium"
+              labelClass="text-[#9399AB] text-[14px] font-medium"
               control={control}
               errors={errors}
               labelText="Workspace URL"
@@ -226,7 +233,7 @@ const General_Settings = () => {
               className="bg-[#f7f7f7] border border-[#ececec] flex rounded-md mt-2"
             />
             <span
-              class="!border-left-0 text-gray-800 mt-2 bg-[#f7f7f7] font-semibold  global-inputFiled text-[12px] px-3 items-center h-[45px] py-2 !border-gray-300 cursor-pointer flex justify-center uppercase "
+              class="!border-left-0 text-[#fff] mt-[6px] bg-[#9399AB] font-semibold global-inputFiled text-[13px] px-5 items-center h-[45px] py-2 !border-gray-300 cursor-pointer flex justify-center uppercase"
               onClick={() => handleEditClick("url")}
             >
               Edit
@@ -235,10 +242,10 @@ const General_Settings = () => {
           </div>
           <div className="mb-5 w-[40%]">
             <div className="mt-5">
-              <label class="block mb-2 text-base font-medium text-[#2f2f2f]">
+              <label class="block mb-2 text-[15px] font-semibold text-[#373737]">
                 Custom Domain
               </label>
-              <p class="text-gray-700">
+              <p class="text-[#9399AB] text-[14px] mb-2">
                 Use a custom domain for your team to access your <br></br>{" "}
                 workspace from.
               </p>
@@ -251,7 +258,7 @@ const General_Settings = () => {
                     : false
                 }
                 name="Off"
-                className="w-[60px] h-7 bg-[#00b8a9] text-[#fff] rounded-full peer   peer-checked:after:translate-x-full  peer-checked:bg-[#fff]"
+                className="!w-[60px] bg-[#e5e8ef] !h-[36px] text-[#fff] rounded-full peer   peer-checked:after:translate-x-full  peer-checked:bg-[#fff]"
                 onChange={(e) => handleEditClick("customDomain", e)}
               />
             </div>
@@ -259,10 +266,10 @@ const General_Settings = () => {
 
           <div className="mb-5 w-[40%]">
             <div className="mt-5">
-              <label class="block mb-2 text-base font-medium text-[#2f2f2f]">
+              <label class="block mb-2 text-[15px] font-semibold text-[#373737]">
                 Workspace Chat
               </label>
-              <p class="text-gray-700">
+              <p class="text-[#9399AB] text-[14px] mb-2">
                 Will your workspace be using three60 built-in Workspace Chat for
                 direct messaging? You can always turn this feature on/off in
                 your Workspace Settings later.
@@ -276,7 +283,7 @@ const General_Settings = () => {
                     : false
                 }
                 label="Off"
-                className="w-[60px] h-7 bg-[#00b8a9] text-[#fff] rounded-full peer   peer-checked:after:translate-x-full  peer-checked:bg-[#fff]"
+                className="w-[60px] h-7 bg-[#e5e8ef] text-[#fff] rounded-full peer   peer-checked:after:translate-x-full  peer-checked:bg-[#fff]"
                 onChange={(e) => handleEditClick("workspaceChat", e)}
               />
             </div>
@@ -284,10 +291,10 @@ const General_Settings = () => {
 
           <div className="mb-5 w-[40%]">
             <div className="mt-5">
-              <label class="block mb-2 text-base font-medium text-[#2f2f2f]">
+              <label class="block mb-2 text-[15px] font-semibold text-[#373737]">
                 Guest Chat
               </label>
-              <p class="text-gray-700">
+              <p class="text-[#9399AB] text-[14px] mb-2">
                 Allow Guests to send and receive direct messages from workspace
                 owners.
               </p>
@@ -299,14 +306,14 @@ const General_Settings = () => {
                     : false
                 }
                 label="Off"
-                className="w-[60px] h-7 bg-[#00b8a9] text-[#fff] rounded-full peer   peer-checked:after:translate-x-full  peer-checked:bg-[#fff]"
+                className="w-[60px] h-7 bg-[#e5e8ef] text-[#fff] rounded-full peer   peer-checked:after:translate-x-full  peer-checked:bg-[#fff]"
                 onChange={(e) => handleEditClick("guestChat", e)}
               />
             </div>
           </div>
           <div className="mb-5 w-[40%]">
             <div className="mt-5">
-              <label class="block mb-2 text-base font-medium text-[#2f2f2f]">
+              <label class="block mb-2 text-[15px] font-semibold text-[#373737]">
                 Disable Weekends
               </label>
               <Switch
@@ -318,17 +325,17 @@ const General_Settings = () => {
                     : false
                 }
                 label="Off"
-                className="w-[60px] h-7 bg-[#00b8a9] text-[#fff] rounded-full peer   peer-checked:after:translate-x-full  peer-checked:bg-[#fff]"
+                className="w-[60px] h-7 bg-[#e5e8ef] text-[#fff] rounded-full peer   peer-checked:after:translate-x-full  peer-checked:bg-[#fff]"
                 onChange={(e) => handleEditClick("weekend", e)}
               />
             </div>
           </div>
           <div class="w-[40%] mb-5">
             <div class="mt-3">
-              <label class="block mb-2 text-base font-medium text-[#2f2f2f]">
+              <label class="block mb-2 text-[15px] font-semibold text-[#373737]">
                 Default Time Tracker
               </label>
-              <p class="text-gray-700">
+              <p class="text-[#9399AB] text-[14px] mb-2">
                 Select your default time tracking solution between three60 and{" "}
                 <br></br> Harvest.
               </p>

@@ -1,5 +1,5 @@
 import "../Header.css";
-import { useNavigate } from "react-router";
+import { useNavigate, useLocation } from "react-router";
 import { Input } from "@mui/material";
 import SideBarPortfolio from "./sideBarPortfolio";
 import { openPortfolio } from "redux/reducers/portfolio";
@@ -30,6 +30,7 @@ import { useSelector } from "react-redux";
 function MainSideBar() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation().pathname;
   const [favouriteShow, setFavouriteShow] = useState(false);
   const sideWidth = useSelector((state) => state.projectTaskSlice.sidebarWidth);
 
@@ -43,7 +44,7 @@ function MainSideBar() {
       name: "CHAT",
     },
   ];
-
+  console.log(location, "location");
   return (
     <div className="flex relative flex-auto">
       {/* show and hide sidebar start */}
@@ -91,7 +92,9 @@ function MainSideBar() {
                   <div className=" px-0 relative">
                     <div
                       onClick={() => navigate(links.projectsOverview)}
-                      className="flex space-x-2 border-[#eee] border-b items-center hover:text-[#333] py-3 pl-[1.3rem] cursor-pointer"
+                      className={` ${
+                        location === "/projects-overview" ? "active" : ""
+                      } flex space-x-2 border-[#eee] border-b items-center hover:text-[#333] py-3 pl-[1.3rem] cursor-pointer`}
                     >
                       <WorkspacesIcon sx={{ fontSize: "18px" }} />
                       <h2 className="text-[14px] font-semibold">Analysis</h2>
@@ -104,21 +107,27 @@ function MainSideBar() {
                       <h2 className="text-[14px] font-semibold">WorkLoads</h2>
                     </div> */}
                     <div
-                      className="flex space-x-2 border-[#eee] border-b py-3 pl-[1.3rem] hover:text-[#333] items-center cursor-pointer"
+                      className={`${
+                        location === "/workLoads" ? "active" : ""
+                      } flex space-x-2 border-[#eee] border-b py-3 pl-[1.3rem] hover:text-[#333] items-center cursor-pointer`}
                       onClick={() => navigate(links.workLoads)}
                     >
                       <AssignmentIcon sx={{ fontSize: "18px" }} />
                       <h2 className="text-[14px] font-semibold">WorkLoads</h2>
                     </div>
                     <div
-                      className="flex space-x-2 border-[#eee] border-b py-3 pl-[1.3rem] hover:text-[#333] items-center cursor-pointer"
+                      className={`${
+                        location === "/calendar" ? "active" : ""
+                      } flex space-x-2 border-[#eee] border-b py-3 pl-[1.3rem] hover:text-[#333] items-center cursor-pointer`}
                       onClick={() => navigate(links.calendar)}
                     >
                       <EventNoteIcon sx={{ fontSize: "18px" }} />
                       <h2 className="text-[14px] font-semibold">Calendar</h2>
                     </div>
                     <div
-                      className="flex space-x-2 hover:text-[#333] border-[#eee] border-b py-3 pl-[1.3rem] items-center cursor-pointer"
+                      className={` ${
+                        location === "/all/tasks" ? "active" : ""
+                      } flex space-x-2 hover:text-[#333] border-[#eee] border-b py-3 pl-[1.3rem] items-center cursor-pointer`}
                       onClick={(e) => {
                         e.preventDefault();
                         navigate(links.allTasks);
@@ -128,7 +137,9 @@ function MainSideBar() {
                       <h2 className="text-[14px] font-semibold">All Tasks</h2>
                     </div>
                     <div
-                      className="flex space-x-2 border-[#eee] border-b py-3 hover:text-[#333] pl-[1.3rem] items-center cursor-pointer"
+                      className={` ${
+                        location === "/my/work" ? "active" : ""
+                      } flex space-x-2 border-[#eee] border-b py-3 hover:text-[#333] pl-[1.3rem] items-center cursor-pointer`}
                       onClick={(e) => {
                         navigate(links.myWork);
                       }}

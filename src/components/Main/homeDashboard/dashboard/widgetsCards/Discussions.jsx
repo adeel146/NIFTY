@@ -228,7 +228,7 @@ const Discussions = ({
               </div>
             </div>
             <div className="flex space-x-2 items-center">
-              <div className="bg-[#f7f9fd] px-[2px] text-[#8e94bb] border border-[#f0f3fb] rounded">
+              {/* <div className="bg-[#f7f9fd] px-[2px] text-[#8e94bb] border border-[#f0f3fb] rounded">
                 <VideocamIcon
                   sx={{
                     fontSize: "20px",
@@ -236,7 +236,7 @@ const Discussions = ({
                     color: "#9198CD",
                   }}
                 />
-              </div>
+              </div> */}
 
               <div
                 onClick={changeWidth}

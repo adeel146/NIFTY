@@ -16,3 +16,7 @@ export const projectTaskSchema = yup.object({
   // // .min(1, "Attachments Required")
   // .default([]),
 });
+
+export const duplicateProjectSchema = yup.object({
+  name: yup.string().required("Name is Required").default(""),
+})
